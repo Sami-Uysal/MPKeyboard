@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/searchInput"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:hint="GIF ara..."
+            android:textColorHint="#666666"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:background="@drawable/search_bg"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:inputType="text"
+            android:imeOptions="actionSearch"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btnCloseSearch"
+            android:layout_width="40dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:text="✕"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:background="@android:color/transparent"
+            android:stateListAnimator="@null" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/searchResultGrid"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:padding="4dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Powered by GIPHY"
+        android:textColor="#666666"
+        android:textSize="10sp"
+        android:layout_gravity="end"
+        android:paddingEnd="8dp"
+        android:paddingTop="2dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#333333" />
+
+</LinearLayout>

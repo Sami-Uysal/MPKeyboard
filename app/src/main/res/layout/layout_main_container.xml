@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Tools Panel (Collapsible - Hidden by default) -->
+    <!-- Placed ABOVE suggestions as requested -->
+    <LinearLayout
+        android:id="@+id/tools_panel"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/tool_clipboard"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:src="@drawable/ic_tool_clipboard"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="Clipboard" />
+
+        <ImageView
+            android:id="@+id/tool_translate"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:src="@drawable/ic_tool_translate"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="Translate" />
+
+        <ImageView
+            android:id="@+id/tool_theme"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:src="@drawable/ic_tool_theme"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="Themes" />
+
+        <ImageView
+            android:id="@+id/tool_settings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:src="@drawable/ic_tool_settings"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="Settings" />
+
+    </LinearLayout>
+
+    <!-- Strip Container (Holds Suggestions or GIF Search) -->
+    <FrameLayout
+        android:id="@+id/strip_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Suggestions Strip (Default) -->
+        <LinearLayout
+            android:id="@+id/suggestions_strip"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#1C1C1E">
+
+            <!-- Toggle Button (Opens/Closes Tools Panel) -->
+            <ImageView
+                android:id="@+id/btn_toggle_tools"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_chevron_right"
+                android:padding="10dp"
+                android:rotation="-90"
+                android:background="?android:selectableItemBackground"
+                android:contentDescription="Toggle Tools" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_suggestions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:overScrollMode="never"
+                    android:padding="4dp" />
+            </LinearLayout>
+
+            <!-- Dummy view to balance the toggle button and center suggestions -->
+            <View
+                android:layout_width="40dp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <!-- GIF Search Strip (Initially Hidden) -->
+        <FrameLayout
+            android:id="@+id/gif_strip_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- Translation Bar Container (shown when translation is active) -->
+    <FrameLayout
+        android:id="@+id/translation_bar_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- Main Keyboard View Wrapper -->
+    <FrameLayout
+        android:id="@+id/main_keyboard_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

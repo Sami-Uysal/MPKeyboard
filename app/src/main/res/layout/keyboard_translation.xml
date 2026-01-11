@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="6dp">
+
+    <!-- Row 1: Language Selection -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Source Language -->
+        <Spinner
+            android:id="@+id/spinnerSourceLang"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:backgroundTint="#FFFFFF"
+            android:popupBackground="#1A1A1A" />
+
+        <!-- Swap Button -->
+        <ImageButton
+            android:id="@+id/btnSwapLangs"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="8dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_chevron_right"
+            android:scaleType="centerInside"
+            android:contentDescription="Dilleri Değiştir" />
+
+        <!-- Target Language -->
+        <Spinner
+            android:id="@+id/spinnerTargetLang"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:backgroundTint="#FFFFFF"
+            android:popupBackground="#1A1A1A" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Close Button -->
+        <ImageButton
+            android:id="@+id/btnCloseTranslate"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:scaleType="centerInside"
+            android:contentDescription="Kapat" />
+    </LinearLayout>
+
+    <!-- Row 2: Input Display (Non-focusable) + Translate Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical">
+
+        <!-- Input Display - NOT focusable, controlled by main keyboard -->
+        <TextView
+            android:id="@+id/txtTranslateInput"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_field"
+            android:paddingHorizontal="12dp"
+            android:hint="Yazın..."
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:textSize="14sp"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <!-- Clear Button -->
+        <ImageButton
+            android:id="@+id/btnClearInput"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="4dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:scaleType="centerInside"
+            android:padding="10dp"
+            android:contentDescription="Temizle" />
+
+        <!-- Translate Button -->
+        <Button
+            android:id="@+id/btnTranslate"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/button_primary"
+            android:text="Çevir"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:paddingHorizontal="16dp" />
+    </LinearLayout>
+
+</LinearLayout>

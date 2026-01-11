@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:orientation="horizontal"
+    android:background="@color/keyboard_background"
+    android:gravity="center_vertical">
+
+    <!-- ViewFlipper to switch between Candidates and Tools -->
+    <ViewFlipper
+        android:id="@+id/viewFlipper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Child 0: Candidates View (With Open Button) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <!-- Open Tools Button -->
+            <ImageButton
+                android:id="@+id/btnOpenTools"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="@color/key_text_primary"
+                android:contentDescription="Open Tools" />
+
+            <!-- Suggestions Scroll -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="none">
+                <LinearLayout
+                    android:id="@+id/candidateStripContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp" />
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <!-- Child 1: Tools View (With Close/Back Button) -->
+        <LinearLayout
+            android:id="@+id/viewTools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Back/Close Tools Button -->
+            <ImageButton
+                android:id="@+id/btnCloseTools"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:src="@drawable/ic_chevron_right"
+                android:rotation="180"
+                android:tint="@color/key_text_primary"
+                android:contentDescription="Close Tools" />
+
+            <ImageButton
+                android:id="@+id/btnToolClipboard"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:src="@drawable/ic_tool_clipboard"
+                android:scaleType="centerInside"
+                android:padding="8dp"
+                android:contentDescription="Clipboard" />
+
+            <ImageButton
+                android:id="@+id/btnToolTranslate"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:src="@drawable/ic_tool_translate"
+                android:scaleType="centerInside"
+                android:padding="8dp"
+                android:contentDescription="Translate" />
+
+            <ImageButton
+                android:id="@+id/btnToolTheme"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:src="@drawable/ic_tool_theme"
+                android:scaleType="centerInside"
+                android:padding="8dp"
+                android:contentDescription="Theme" />
+
+            <ImageButton
+                android:id="@+id/btnToolSettings"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:src="@drawable/ic_tool_settings"
+                android:scaleType="centerInside"
+                android:padding="8dp"
+                android:contentDescription="Settings" />
+
+        </LinearLayout>
+
+    </ViewFlipper>
+
+</LinearLayout>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/settings_surface"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tema Özelleştir"
+        android:textColor="@color/settings_text_primary"
+        android:textSize="22sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="24dp"
+        android:layout_gravity="center_horizontal" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/keyboardPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/settings_surface_highlight"
+        app:cardBackgroundColor="#000000"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <TextView android:id="@+id/previewKey1" style="@style/PreviewKeyStyle"
+                    android:text="Q" />
+                <TextView android:id="@+id/previewKey2" style="@style/PreviewKeyStyle"
+                    android:text="W" />
+                <TextView android:id="@+id/previewKey3" style="@style/PreviewKeyStyle"
+                    android:text="E" />
+                <TextView android:id="@+id/previewKey4" style="@style/PreviewKeyStyle"
+                    android:text="R" />
+                <TextView android:id="@+id/previewKey5" style="@style/PreviewKeyStyle"
+                    android:text="T" />
+                <TextView android:id="@+id/previewKey6" style="@style/PreviewKeyStyle"
+                    android:text="Y" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="4dp">
+                <TextView android:id="@+id/previewKey7" style="@style/PreviewKeyStyle"
+                    android:text="A" />
+                <TextView android:id="@+id/previewKey8" style="@style/PreviewKeyStyle"
+                    android:text="S" />
+                <TextView android:id="@+id/previewKey9" style="@style/PreviewKeyStyle"
+                    android:text="D" />
+                <TextView android:id="@+id/previewKey10" style="@style/PreviewKeyStyle"
+                    android:text="F" />
+                <TextView android:id="@+id/previewKey11" style="@style/PreviewKeyStyle"
+                    android:text="G" />
+                <TextView android:id="@+id/previewKey12" style="@style/PreviewKeyStyle"
+                    android:text="H" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Arkaplan Rengi"
+        android:textColor="@color/settings_text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="12dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginBottom="20dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <View android:id="@+id/bgBlack" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_black" />
+            <View android:id="@+id/bgDarkBlue" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_dark_blue" />
+            <View android:id="@+id/bgDarkPurple" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_dark_purple" />
+            <View android:id="@+id/bgDarkGreen" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_dark_green" />
+            <View android:id="@+id/bgDarkRed" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_dark_red" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tuş Rengi"
+        android:textColor="@color/settings_text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="12dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginBottom="32dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <View android:id="@+id/keyGray" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_gray" />
+            <View android:id="@+id/keyBlue" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_blue" />
+            <View android:id="@+id/keyPurple" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_purple" />
+            <View android:id="@+id/keyGreen" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_green" />
+            <View android:id="@+id/keyRed" style="@style/ColorPickerStyle"
+                android:background="@drawable/color_red" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSaveTheme"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Kaydet ve Uygula"
+        android:textColor="@color/button_text"
+        android:textSize="16sp"
+        android:textAllCaps="false"
+        app:cornerRadius="14dp"
+        app:backgroundTint="@color/button_primary"
+        android:fontFamily="sans-serif-medium" />
+
+</LinearLayout>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Search Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_gif"
+            android:tint="#8E8E93"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/input_gif_search_strip"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_field"
+            android:gravity="center_vertical"
+            android:hint="@string/search_gifs"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#8E8E93"
+            android:textSize="14sp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:maxLines="1" />
+
+        <ImageButton
+            android:id="@+id/btn_close_gif_strip"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_close"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:tint="#8E8E93"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Results (Horizontal) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_gif_results"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="4dp"
+        android:clipToPadding="false"
+        android:orientation="vertical" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Powered by GIPHY"
+        android:textColor="#505050"
+        android:textSize="10sp"
+        android:gravity="center"
+        android:paddingBottom="2dp" />
+
+</LinearLayout>

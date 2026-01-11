@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/keyboardRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:gravity="center_vertical">
+
+        <Button android:id="@+id/tabEmoji"
+            android:layout_width="48dp"
+            android:layout_height="32dp"
+            android:text="😀"
+            android:textSize="18sp"
+            android:background="@android:color/transparent"
+            android:stateListAnimator="@null" />
+
+        <Button android:id="@+id/tabGif"
+            android:layout_width="48dp"
+            android:layout_height="32dp"
+            android:text="GIF"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/gif_tab_bg"
+            android:stateListAnimator="@null" />
+
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/emojiGrid"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:padding="4dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+
+            <Button android:id="@+id/key_abc_emoji"
+                android:layout_width="48dp"
+                android:layout_height="32dp"
+                android:text="ABC"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catFaces"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="😀"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catNature"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="🐱"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catFood"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="🍔"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catActivity"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="⚽"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catTravel"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="🚗"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catObjects"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="💡"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <Button android:id="@+id/catSymbols"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="❤️"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+
+            <View android:layout_width="16dp" android:layout_height="1dp" />
+
+            <Button android:id="@+id/key_emoji_backspace"
+                android:layout_width="48dp"
+                android:layout_height="32dp"
+                android:text="⌫"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</LinearLayout>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="keyboard_background">#000000</color>
+    <color name="key_text_color">#FFFFFF</color>
+    <color name="key_background">#1C1C1E</color>
+    <color name="key_pressed">#3A3A3C</color>
+    <color name="key_ripple">#4DFFFFFF</color>
+    <color name="key_special">#2C2C2E</color>
+    <color name="candidate_strip_background">#0D0D0D</color>
+
+    <!-- Modern Dark Theme Colors -->
+    <color name="settings_background">#121212</color>
+    <color name="settings_surface">#1E1E1E</color>
+    <color name="settings_surface_highlight">#2C2C2E</color>
+    <color name="settings_text_primary">#F2F2F7</color>
+    <color name="settings_text_secondary">#8E8E93</color>
+    <color name="accent_color">#0A84FF</color>
+    <color name="accent_gradient_start">#0A84FF</color>
+    <color name="accent_gradient_end">#5E5CE6</color>
+
+    <color name="card_background">#1C1C1E</color>
+    <color name="button_primary">#0A84FF</color>
+    <color name="button_secondary">#2C2C2E</color>
+    <color name="button_text">#FFFFFF</color>
+    <color name="status_active">#30D158</color>
+    <color name="status_inactive">#FF453A</color>
+
+    <!-- Toolbar Colors -->
+    <color name="key_text_primary">#FFFFFF</color>
+    <color name="key_text_secondary">#8E8E93</color>
+</resources>

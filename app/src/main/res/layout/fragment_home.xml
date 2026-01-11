@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/settings_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/settings_surface_highlight"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <View
+                    android:id="@+id/statusIndicator"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:background="@drawable/status_indicator" />
+
+                <TextView
+                    android:id="@+id/statusText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/status_checking"
+                    android:textColor="@color/settings_text_primary"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEnableKeyboard"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:text="@string/btn_enable_keyboard"
+            android:textColor="@color/button_text"
+            android:textSize="16sp"
+            android:textAllCaps="false"
+            app:cornerRadius="14dp"
+            app:backgroundTint="@color/button_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSelectKeyboard"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="@string/btn_select_keyboard"
+            android:textColor="@color/settings_text_primary"
+            android:textSize="16sp"
+            android:textAllCaps="false"
+            app:cornerRadius="14dp"
+            app:backgroundTint="@color/button_secondary"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="12dp"
+            android:text="@string/label_test_area"
+            android:textColor="@color/settings_text_secondary"
+            android:textSize="13sp"
+            android:letterSpacing="0.05"
+            android:fontFamily="sans-serif-medium" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/settings_surface_highlight"
+            app:strokeWidth="1dp">
+
+            <EditText
+                android:id="@+id/testInput"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="@android:color/transparent"
+                android:gravity="top|start"
+                android:hint="@string/hint_type_here"
+                android:textColorHint="@color/settings_text_secondary"
+                android:padding="20dp"
+                android:textColor="@color/settings_text_primary"
+                android:textSize="16sp"
+                android:inputType="textMultiLine" />
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</ScrollView>
