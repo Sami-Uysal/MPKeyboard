@@ -1,4 +1,4 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.features.clipboard
 
 import android.content.ClipboardManager
 import android.content.Context
@@ -9,21 +9,23 @@ import com.google.gson.reflect.TypeToken
 class KeyboardClipboardManager(private val context: Context) {
 
     private val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    private val prefs: SharedPreferences = context.getSharedPreferences("clipboard_history", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+            context.getSharedPreferences("clipboard_history", Context.MODE_PRIVATE)
     private val gson = Gson()
     private val MAX_HISTORY = 20
 
     private var history: MutableList<String> = loadHistory()
 
-    private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
-        val clip = clipboard.primaryClip
-        if (clip != null && clip.itemCount > 0) {
-            val text = clip.getItemAt(0).text?.toString()
-            if (!text.isNullOrEmpty()) {
-                addClip(text)
+    private val clipListener =
+            ClipboardManager.OnPrimaryClipChangedListener {
+                val clip = clipboard.primaryClip
+                if (clip != null && clip.itemCount > 0) {
+                    val text = clip.getItemAt(0).text?.toString()
+                    if (!text.isNullOrEmpty()) {
+                        addClip(text)
+                    }
+                }
             }
-        }
-    }
 
     init {
         try {
@@ -67,7 +69,6 @@ class KeyboardClipboardManager(private val context: Context) {
         val json = gson.toJson(history)
         prefs.edit().putString("history", json).apply()
     }
-    
-    fun copyToClipboard(text: String) {
-    }
+
+    fun copyToClipboard(text: String) {}
 }

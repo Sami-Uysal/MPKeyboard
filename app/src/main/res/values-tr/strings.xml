@@ -17,8 +17,8 @@
     <string name="hint_type_here">Yazmaya başlayın...</string>
 
     <string name="label_appearance">GÖRÜNÜM</string>
-    <string name="btn_theme_customize">🎨 Temayı Özelleştir</string>
-    <string name="btn_languages">🌐 Diller</string>
+    <string name="btn_theme_customize">Temayı Özelleştir</string>
+    <string name="btn_languages">Diller</string>
 
     <string name="title_select_language">Dil Seçin</string>
     <string name="lang_tr">Türkçe</string>
@@ -38,7 +38,7 @@
     <string name="category_flags">Bayraklar</string>
     <string name="search_gifs">GIF Ara...</string>
 
-    <string name="btn_shortcuts">⌨️ Metin Kısayolları</string>
+    <string name="btn_shortcuts">Metin Kısayolları</string>
     <string name="title_shortcuts">Metin Kısayolları</string>
     <string name="title_add_shortcut">Kısayol Ekle</string>
     <string name="title_edit_shortcut">Kısayolu Düzenle</string>

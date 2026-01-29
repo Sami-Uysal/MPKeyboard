@@ -2,13 +2,17 @@ package com.samiuysal.keyboard
 
 import android.content.Context
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PredictionEngine(private val context: Context) {
+@Singleton
+class PredictionEngine @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val root = TrieNode()
     private var currentLanguage = ""

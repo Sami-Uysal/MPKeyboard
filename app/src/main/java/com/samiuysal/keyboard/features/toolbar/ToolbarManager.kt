@@ -1,4 +1,4 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.features.toolbar
 
 import android.content.Intent
 import android.view.View
@@ -6,21 +6,20 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.samiuysal.keyboard.R
+import com.samiuysal.keyboard.features.shortcuts.ShortcutManager
+import com.samiuysal.keyboard.features.suggestions.PredictionEngine
+import com.samiuysal.keyboard.features.suggestions.SuggestionAdapter
+import com.samiuysal.keyboard.service.MPKeyboardService
+import com.samiuysal.keyboard.settings.MainActivity
 
-class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootView: View) {
-    // Tools Panel (Collapsible)
+class ToolbarManager(private val service: MPKeyboardService, private val rootView: View) {
     private val toolsPanel: LinearLayout = rootView.findViewById(R.id.tools_panel)
-
-    // Toggle Button (in Suggestions Strip)
     private val btnToggle: ImageView = rootView.findViewById(R.id.btn_toggle_tools)
-
-    // Suggestions
     private val suggestionsRecycler: RecyclerView = rootView.findViewById(R.id.recycler_suggestions)
     private lateinit var suggestionAdapter: SuggestionAdapter
     private var predictionEngine: PredictionEngine? = null
     private var shortcutManager: ShortcutManager? = null
-
-    // Tool Buttons
     private val btnClipboard: ImageView = rootView.findViewById(R.id.tool_clipboard)
     private val btnTranslate: ImageView = rootView.findViewById(R.id.tool_translate)
     private val btnTheme: ImageView = rootView.findViewById(R.id.tool_theme)
@@ -33,10 +32,8 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
     }
 
     private fun setupInteractions() {
-        // Toggle Button: Show/Hide Tools Panel
         btnToggle.setOnClickListener { toggleToolsPanel() }
 
-        // Setup Suggestions Adapter
         suggestionAdapter = SuggestionAdapter { word -> service.commitSuggestion(word) }
         suggestionsRecycler.layoutManager =
                 androidx.recyclerview.widget.LinearLayoutManager(
@@ -46,7 +43,6 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
                 )
         suggestionsRecycler.adapter = suggestionAdapter
 
-        // Tool Button Listeners
         btnClipboard.setOnClickListener { service.openClipboardFeature() }
 
         btnTranslate.setOnClickListener { service.openTranslationFeature() }
@@ -83,7 +79,6 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
 
         toolsPanel.visibility = View.GONE
         isToolsPanelVisible = false
-        // Arrow points UP/LEFT (to open) - Default state
         btnToggle.rotation = -90f
     }
 
@@ -98,11 +93,8 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
         if (isToolsPanelVisible) {
             hideToolsPanel()
         } else {
-            // Show Tools Panel
             toolsPanel.visibility = View.VISIBLE
             isToolsPanelVisible = true
-
-            // Arrow points RIGHT/DOWN (to close)
             btnToggle.rotation = 90f
         }
     }
@@ -110,16 +102,13 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
     fun updateSuggestions(text: String, isNewWord: Boolean) {
         if (predictionEngine == null) return
 
-        // Check if the typed text matches a shortcut
         val shortcutExpansion = shortcutManager?.getExpansion(text)
 
         service.handler.post {
             if (shortcutExpansion != null && text.isNotEmpty()) {
-                // Show shortcut expansion - clicking it will insert it directly
                 suggestionAdapter.setSuggestions(listOf(shortcutExpansion))
                 suggestionsRecycler.scrollToPosition(0)
             } else {
-                // Show normal predictions
                 val suggestions = predictionEngine!!.getPredictions(text)
                 suggestionAdapter.setSuggestions(suggestions)
                 if (suggestions.isNotEmpty()) {
@@ -131,12 +120,10 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
 
     fun showShortcutFeedback(trigger: String, expansion: String) {
         service.handler.post {
-            // Show shortcut feedback as a special suggestion
             val feedbackText = "⚡ \"$trigger\" → \"$expansion\""
             suggestionAdapter.setSuggestions(listOf(feedbackText))
             suggestionsRecycler.scrollToPosition(0)
 
-            // After 2 seconds, clear the feedback and restore normal suggestions
             service.handler.postDelayed({ suggestionAdapter.setSuggestions(emptyList()) }, 2000)
         }
     }

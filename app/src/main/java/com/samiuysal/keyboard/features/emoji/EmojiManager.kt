@@ -1,8 +1,9 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.features.emoji
 
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.samiuysal.keyboard.R
 import java.io.InputStreamReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

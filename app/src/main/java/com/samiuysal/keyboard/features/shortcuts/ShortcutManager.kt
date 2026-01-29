@@ -1,4 +1,4 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.features.shortcuts
 
 import android.content.Context
 import android.content.SharedPreferences

@@ -17,8 +17,8 @@
     <string name="hint_type_here">Start typing...</string>
 
     <string name="label_appearance">APPEARANCE</string>
-    <string name="btn_theme_customize">🎨 Customize Theme</string>
-    <string name="btn_languages">🌐 Languages</string>
+    <string name="btn_theme_customize">Customize Theme</string>
+    <string name="btn_languages">Languages</string>
 
     <string name="title_select_language">Select Language</string>
     <string name="lang_tr">Türkçe</string>
@@ -38,7 +38,7 @@
     <string name="category_flags">Flags</string>
     <string name="search_gifs">Search GIFs...</string>
 
-    <string name="btn_shortcuts">⌨️ Text Shortcuts</string>
+    <string name="btn_shortcuts">Text Shortcuts</string>
     <string name="title_shortcuts">Text Shortcuts</string>
     <string name="title_add_shortcut">Add Shortcut</string>
     <string name="title_edit_shortcut">Edit Shortcut</string>

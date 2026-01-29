@@ -1,4 +1,6 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.features.gif
+
+import com.samiuysal.keyboard.BuildConfig
 
 import retrofit2.Call
 import retrofit2.Callback
@@ -9,7 +11,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 object GiphyManager {
     private const val BASE_URL = "https://api.giphy.com/"
 
-    // API KEY SHOULD BE IN BuildConfig
     private val API_KEY = BuildConfig.GIPHY_API_KEY
 
     private var api: GiphyApi? = null

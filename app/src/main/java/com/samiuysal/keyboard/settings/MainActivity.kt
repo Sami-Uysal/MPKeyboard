@@ -1,4 +1,4 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.settings
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
@@ -8,14 +8,17 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.samiuysal.keyboard.R
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun attachBaseContext(newBase: android.content.Context) {
         val prefs =
                 newBase.getSharedPreferences("keyboard_prefs", android.content.Context.MODE_PRIVATE)
         val lang = prefs.getString("selected_language", "tr") ?: "tr"
-        val locale = java.util.Locale(lang)
+        val locale = java.util.Locale.Builder().setLanguage(lang).build()
         val config = android.content.res.Configuration(newBase.resources.configuration)
         config.setLocale(locale)
         super.attachBaseContext(newBase.createConfigurationContext(config))

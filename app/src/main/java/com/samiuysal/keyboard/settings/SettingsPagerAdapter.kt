@@ -1,4 +1,4 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.settings
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity

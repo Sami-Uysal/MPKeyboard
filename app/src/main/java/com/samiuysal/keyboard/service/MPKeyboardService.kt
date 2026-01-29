@@ -1,26 +1,20 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.service
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.ClipDescription
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Spinner
@@ -39,19 +33,44 @@ import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
+import com.samiuysal.keyboard.BuildConfig
+import com.samiuysal.keyboard.R
+import com.samiuysal.keyboard.features.clipboard.ClipboardAdapter
+import com.samiuysal.keyboard.features.clipboard.KeyboardClipboardManager
+import com.samiuysal.keyboard.features.emoji.CategoryAdapter
+import com.samiuysal.keyboard.features.emoji.CategoryItem
+import com.samiuysal.keyboard.features.emoji.EmojiAdapter
+import com.samiuysal.keyboard.features.emoji.EmojiManager
+import com.samiuysal.keyboard.features.gif.GifAdapter
+import com.samiuysal.keyboard.features.gif.GiphyApi
+import com.samiuysal.keyboard.features.gif.GiphyManager
+import com.samiuysal.keyboard.features.shortcuts.ShortcutManager
+import com.samiuysal.keyboard.features.suggestions.PredictionEngine
+import com.samiuysal.keyboard.features.toolbar.ToolbarManager
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.util.concurrent.Executors
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class SimpleDarkKeyboard : InputMethodService() {
+@AndroidEntryPoint
+class MPKeyboardService : InputMethodService() {
+
+    @Inject lateinit var inputHandler: com.samiuysal.keyboard.features.keyboard.InputHandler
+    @Inject lateinit var keyboardManager: com.samiuysal.keyboard.features.keyboard.KeyboardManager
+    @Inject
+    lateinit var keyboardPreferences: com.samiuysal.keyboard.core.preferences.KeyboardPreferences
+
+    private lateinit var layoutManager:
+            com.samiuysal.keyboard.features.keyboard.KeyboardLayoutManager
 
     companion object {
         const val ACTION_THEME_CHANGED = "com.samiuysal.keyboard.THEME_CHANGED"
         val GIPHY_API_KEY: String = BuildConfig.GIPHY_API_KEY
-        private const val TAG = "SimpleDarkKeyboard"
+        private const val TAG = "MPKeyboardService"
     }
 
     private var composingText = StringBuilder()
@@ -62,9 +81,6 @@ class SimpleDarkKeyboard : InputMethodService() {
     private var isCapsLocked = false
     private var currentLayout = "qwerty"
     private lateinit var keyboardView: View
-    private val letterKeys = mutableListOf<Button>()
-    private val allKeys = mutableListOf<View>()
-    private var shiftButton: ImageButton? = null
 
     private var soundEnabled = true
 
@@ -86,38 +102,14 @@ class SimpleDarkKeyboard : InputMethodService() {
 
     private var currentLanguage = "tr"
     private var currentKeyColor = Color.parseColor("#3A3A3C")
-    private var isPopupActive = false
+
     private var isGifSearchMode = false
     private val gifSearchQuery = StringBuilder()
     private var gifSearchInput: TextView? = null
-    private var currentPopupWindow: android.widget.PopupWindow? = null
-    private var currentLongPressRunnable: Runnable? = null
-    private var currentPopupVariants: List<String> = emptyList()
-    private val popupButtons = mutableListOf<TextView>()
-    private val specialKeys = mutableListOf<View>()
-    private var lastPopupX = 0f
-    private var lastPopupY = 0f
 
-    private val popupMapTr =
-            mapOf(
-                    "c" to listOf("ç"),
-                    "s" to listOf("ş"),
-                    "g" to listOf("ğ"),
-                    "u" to listOf("ü"),
-                    "o" to listOf("ö"),
-                    "i" to listOf("ı", "İ")
-            )
+    private var onGifSearchUpdate: ((String) -> Unit)? = null
+    private lateinit var gifStripContainer: FrameLayout
 
-    private val popupMapEn =
-            mapOf(
-                    "e" to listOf("é", "è", "ê", "ë"),
-                    "a" to listOf("à", "á", "â", "ä"),
-                    "u" to listOf("ù", "ú", "û", "ü"),
-                    "i" to listOf("ì", "í", "î", "ï"),
-                    "o" to listOf("ò", "ó", "ô", "ö"),
-                    "c" to listOf("ç"),
-                    "n" to listOf("ñ")
-            )
     private val giphyApi: GiphyApi by lazy {
         Retrofit.Builder()
                 .baseUrl("https://api.giphy.com/")
@@ -128,16 +120,6 @@ class SimpleDarkKeyboard : InputMethodService() {
 
     private val executor = Executors.newSingleThreadExecutor()
     val handler = Handler(Looper.getMainLooper())
-    private var isDeleting = false
-    private val deleteRunnable =
-            object : Runnable {
-                override fun run() {
-                    if (isDeleting) {
-                        handleBackspace()
-                        handler.postDelayed(this, 50)
-                    }
-                }
-            }
 
     private val themeReceiver =
             object : BroadcastReceiver() {
@@ -152,9 +134,16 @@ class SimpleDarkKeyboard : InputMethodService() {
         File(cacheDir, "images").apply { if (!exists()) mkdirs() }
     }
 
+    override fun onStartInput(
+            attribute: android.view.inputmethod.EditorInfo?,
+            restarting: Boolean
+    ) {
+        super.onStartInput(attribute, restarting)
+        inputHandler.updateConnection(currentInputConnection)
+    }
+
     fun commitSuggestion(word: String) {
-        val inputConnection = currentInputConnection ?: return
-        inputConnection.commitText("$word ", 1)
+        inputHandler.commitText("$word ")
 
         val prevWord = composingText.toString()
         predictionEngine.learn(word)
@@ -173,6 +162,14 @@ class SimpleDarkKeyboard : InputMethodService() {
                 IntentFilter(ACTION_THEME_CHANGED),
                 ContextCompat.RECEIVER_NOT_EXPORTED
         )
+
+        layoutManager =
+                com.samiuysal.keyboard.features.keyboard.KeyboardLayoutManager(
+                        this,
+                        layoutInflater,
+                        inputHandler,
+                        keyboardPreferences
+                ) { text -> sendKeyChar(text) }
     }
 
     override fun onCreateCandidatesView(): View? = null
@@ -180,11 +177,28 @@ class SimpleDarkKeyboard : InputMethodService() {
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
 
+        composingText.clear()
+
         val mimeTypes = arrayOf("image/gif")
         EditorInfoCompat.setContentMimeTypes(
                 info ?: android.view.inputmethod.EditorInfo(),
                 mimeTypes
         )
+        applyTheme()
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+
+        composingText.clear()
+
+        if (isGifSearchMode) {
+            closeGifSearch()
+        }
+
+        if (::toolbarManager.isInitialized) {
+            toolbarManager.updateSuggestions("", isNewWord = true)
+        }
     }
 
     fun openClipboardFeature() {
@@ -210,7 +224,7 @@ class SimpleDarkKeyboard : InputMethodService() {
 
         val adapter =
                 ClipboardAdapter(clipboardManager.getHistory()) { text ->
-                    currentInputConnection?.commitText(text, 1)
+                    inputHandler.commitText(text)
                 }
         recycler.adapter = adapter
 
@@ -274,7 +288,6 @@ class SimpleDarkKeyboard : InputMethodService() {
             val translateBtn = translationView!!.findViewById<Button>(R.id.btnTranslate)
             val clearBtn = translationView!!.findViewById<View>(R.id.btnClearInput)
 
-            // Set blue border to indicate translation is active
             inputDisplay.setBackgroundResource(R.drawable.bg_translation_active)
 
             clearBtn.setOnClickListener { inputDisplay.text = "" }
@@ -289,7 +302,7 @@ class SimpleDarkKeyboard : InputMethodService() {
                     val targetLang = langCodes[spinnerTarget.selectedItemPosition]
 
                     translateText(input, sourceLang, targetLang) { result ->
-                        currentInputConnection?.commitText(result, 1)
+                        inputHandler.commitText(result)
 
                         inputDisplay.text = ""
                         translateBtn.isEnabled = true
@@ -397,16 +410,16 @@ class SimpleDarkKeyboard : InputMethodService() {
     }
 
     private fun applyTheme() {
-        val prefs = getSharedPreferences("keyboard_prefs", Context.MODE_PRIVATE)
-
-        currentLanguage = prefs.getString("selected_language", "tr") ?: "tr"
+        currentLanguage = keyboardPreferences.language
 
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
             predictionEngine.loadLanguage(currentLanguage)
         }
 
-        val bgColor = prefs.getString("bg_color", "#000000") ?: "#000000"
-        val keyColor = prefs.getString("key_color", "#3A3A3C") ?: "#3A3A3C"
+        layoutManager.applyTheme()
+
+        val bgColor = keyboardPreferences.backgroundColor
+        val keyColor = keyboardPreferences.keyColor
 
         val parsedBgColor = Color.parseColor(bgColor)
         val parsedKeyColor = Color.parseColor(keyColor)
@@ -417,15 +430,17 @@ class SimpleDarkKeyboard : InputMethodService() {
             @Suppress("DEPRECATION") win.navigationBarColor = parsedBgColor
         }
 
-        keyboardView.setBackgroundColor(parsedBgColor)
+        if (::toolsPanel.isInitialized) {
+            toolsPanel.setBackgroundColor(parsedBgColor)
+        }
+        if (::suggestionsStrip.isInitialized) {
+            suggestionsStrip.setBackgroundColor(parsedBgColor)
+        }
 
-        toolsPanel.setBackgroundColor(parsedBgColor)
-        suggestionsStrip.setBackgroundColor(parsedBgColor)
-
-        translationBarContainer?.setBackgroundColor(parsedBgColor)
+        if (::translationBarContainer.isInitialized) {
+            translationBarContainer.setBackgroundColor(parsedBgColor)
+        }
         clipboardView?.setBackgroundColor(parsedBgColor)
-
-        applyKeyColors()
 
         clipboardView?.findViewById<RecyclerView>(R.id.clipboardList)?.adapter?.let {
             if (it is ClipboardAdapter) {
@@ -434,61 +449,34 @@ class SimpleDarkKeyboard : InputMethodService() {
         }
     }
 
-    private fun applyKeyColors() {
-        if (currentKeyColor == 0) return
-
-        for (key in allKeys) {
-            val drawable =
-                    GradientDrawable().apply {
-                        setColor(currentKeyColor)
-                        cornerRadius = 24f
-                    }
-            key.background = drawable
-
-            if (key is TextView) {
-                key.setTextColor(Color.WHITE)
-            } else if (key is ImageButton) {
-                key.setColorFilter(Color.WHITE)
-            }
-        }
-
-        val specialColor = currentKeyColor
-        for (key in specialKeys) {
-            val drawable =
-                    GradientDrawable().apply {
-                        setColor(specialColor)
-                        cornerRadius = 24f
-                    }
-            key.background = drawable
-
-            if (key is TextView) {
-                key.setTextColor(Color.WHITE)
-            } else if (key is ImageButton) {
-                key.setColorFilter(Color.WHITE)
-            }
-        }
-    }
-
     private fun switchToNumbers() {
         currentLayout = "numbers"
-        keyboardView = layoutInflater.inflate(R.layout.keyboard_numbers, null)
-
-        mainKeyboardFrame.removeAllViews()
-        mainKeyboardFrame.addView(keyboardView)
-
-        setupNumberKeys()
-        applyTheme()
+        layoutManager.setupNumbersLayout(
+                mainKeyboardFrame,
+                onSwitchToQwerty = { switchToQwerty() },
+                onSwitchToSymbols = { switchToSymbols() },
+                onSpace = { handleSpace() },
+                onEnter = { handleEnter() },
+                onBackspace = { handleBackspace() }
+        )
+        keyboardView = layoutManager.keyboardView!!
     }
 
     private fun switchToQwerty() {
         currentLayout = "qwerty"
-        keyboardView = layoutInflater.inflate(R.layout.keyboard_layout, null)
-
-        mainKeyboardFrame.removeAllViews()
-        mainKeyboardFrame.addView(keyboardView)
-
-        setupQwertyKeys()
-        applyTheme()
+        layoutManager.setupQwertyLayout(
+                mainKeyboardFrame,
+                onOpenEmoji = { openEmojiBoard() },
+                onShift = {
+                    isShifted = !isShifted
+                    updateShiftState()
+                },
+                onSwitchToNumbers = { switchToNumbers() },
+                onSpace = { handleSpace() },
+                onEnter = { handleEnter() },
+                onBackspace = { handleBackspace() }
+        )
+        keyboardView = layoutManager.keyboardView!!
         suggestionsStrip.visibility = View.VISIBLE
         toolbarManager.updateSuggestions(composingText.toString(), false)
     }
@@ -496,199 +484,8 @@ class SimpleDarkKeyboard : InputMethodService() {
     private fun getStringByLocale(context: Context, resId: Int, localeCode: String): String {
         val resources = context.resources
         val config = android.content.res.Configuration(resources.configuration)
-        config.setLocale(java.util.Locale(localeCode))
+        config.setLocale(java.util.Locale.forLanguageTag(localeCode))
         return context.createConfigurationContext(config).getText(resId).toString()
-    }
-
-    private fun setupKeyWithPopup(btn: Button) {
-        btn.setOnTouchListener { v, event ->
-            val char = btn.text.toString()
-            val lowerChar = char.lowercase(java.util.Locale.ENGLISH)
-
-            val map = if (currentLanguage == "tr") popupMapTr else popupMapEn
-            val variants = map[lowerChar]
-
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    currentLongPressRunnable = Runnable {
-                        if (variants != null && variants.isNotEmpty()) {
-                            val isUpper = char != lowerChar
-                            val displayVariants =
-                                    if (isUpper) {
-                                        variants.map {
-                                            if (it == "ı") "I"
-                                            else if (it == "i") "İ" else it.uppercase()
-                                        }
-                                    } else {
-                                        variants
-                                    }
-                            showPopup(btn, displayVariants)
-                        }
-                    }
-                    handler.postDelayed(currentLongPressRunnable!!, 250)
-                    v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(50).start()
-                    v.isPressed = true
-
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    if (isPopupActive) {
-                        handlePopupTouch(event.rawX, event.rawY)
-                    }
-                    true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    currentLongPressRunnable?.let { handler.removeCallbacks(it) }
-                    v.animate().scaleX(1f).scaleY(1f).setDuration(50).start()
-                    v.isPressed = false
-
-                    if (isPopupActive) {
-                        val selected = getSelectedPopupItem()
-                        if (selected != null) {
-                            sendKeyChar(selected)
-                        }
-                        dismissPopup()
-                    } else {
-                        sendKeyChar(char)
-                    }
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    private fun showPopup(anchor: View, variants: List<String>) {
-        isPopupActive = true
-        currentPopupVariants = variants
-
-        val popupView =
-                layoutInflater.inflate(R.layout.layout_key_popup, null) as
-                        androidx.cardview.widget.CardView
-
-        popupView.setCardBackgroundColor(currentKeyColor)
-
-        val container = popupView.findViewById<LinearLayout>(R.id.popupContainer)
-        popupButtons.clear()
-
-        for (variant in variants) {
-            val tv = TextView(this)
-            tv.text = variant
-            tv.textSize = 26f
-            tv.setTypeface(null, Typeface.BOLD)
-            tv.setTextColor(Color.WHITE)
-            tv.setPadding(35, 25, 35, 25)
-            tv.gravity = android.view.Gravity.CENTER
-
-            val lp =
-                    LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
-            lp.setMargins(10, 0, 10, 0)
-            tv.layoutParams = lp
-
-            container.addView(tv)
-            popupButtons.add(tv)
-        }
-
-        popupView.measure(
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        )
-
-        val popupWidth = popupView.measuredWidth
-        val popupHeight = popupView.measuredHeight
-
-        val xOffset = (anchor.width - popupWidth) / 2
-        val yOffset = -anchor.height - popupHeight - 80
-
-        currentPopupWindow =
-                android.widget.PopupWindow(
-                        popupView,
-                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-        currentPopupWindow?.isTouchable = false
-        currentPopupWindow?.isFocusable = false
-        currentPopupWindow?.setBackgroundDrawable(
-                android.graphics.drawable.ColorDrawable(Color.TRANSPARENT)
-        )
-        currentPopupWindow?.elevation = 20f
-
-        try {
-            currentPopupWindow?.showAsDropDown(anchor, xOffset, yOffset)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        if (popupButtons.isNotEmpty()) {
-            val initialIndex = (popupButtons.size - 1) / 2
-            val tv = popupButtons[initialIndex]
-            val drawable =
-                    GradientDrawable().apply {
-                        shape = GradientDrawable.RECTANGLE
-                        cornerRadius = 20f
-                        setColor(Color.WHITE)
-                    }
-            tv.background = drawable
-            tv.setTextColor(Color.BLACK)
-        }
-    }
-
-    private fun handlePopupTouch(x: Float, y: Float) {
-        var closestTv: TextView? = null
-        var minUuidDist = Float.MAX_VALUE
-
-        for (tv in popupButtons) {
-            val loc = IntArray(2)
-            tv.getLocationOnScreen(loc)
-            val left = loc[0]
-            val right = left + tv.width
-            val centerX = (left + right) / 2f
-
-            val dist = kotlin.math.abs(x - centerX)
-
-            if (dist < minUuidDist) {
-                if (dist < (tv.width * 1.5)) {
-                    minUuidDist = dist
-                    closestTv = tv
-                }
-            }
-        }
-
-        for (tv in popupButtons) {
-            if (tv == closestTv) {
-                val drawable =
-                        GradientDrawable().apply {
-                            shape = GradientDrawable.RECTANGLE
-                            cornerRadius = 20f
-                            setColor(Color.WHITE)
-                        }
-                tv.background = drawable
-                tv.setTextColor(Color.BLACK)
-            } else {
-                tv.background = null
-                tv.setTextColor(Color.WHITE)
-            }
-        }
-    }
-
-    private fun getSelectedPopupItem(): String? {
-        for (tv in popupButtons) {
-            if (tv.currentTextColor == Color.BLACK) {
-                return tv.text.toString()
-            }
-        }
-        return null
-    }
-
-    private fun dismissPopup() {
-        currentPopupWindow?.dismiss()
-        currentPopupWindow = null
-        isPopupActive = false
-
-        popupButtons.clear()
     }
 
     private fun sendKeyChar(text: String) {
@@ -698,7 +495,7 @@ class SimpleDarkKeyboard : InputMethodService() {
             translationInputField!!.append(text)
         } else {
             composingText.append(text)
-            currentInputConnection?.setComposingText(composingText, 1)
+            inputHandler.setComposingText(composingText)
             toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
         }
     }
@@ -718,394 +515,36 @@ class SimpleDarkKeyboard : InputMethodService() {
 
             val expansion = shortcutManager.getExpansion(text)
             if (expansion != null) {
-                currentInputConnection?.finishComposingText()
-                currentInputConnection?.deleteSurroundingText(text.length, 0)
-                currentInputConnection?.commitText("$expansion ", 1)
+                inputHandler.setComposingText("$expansion ")
+                inputHandler.finishComposingText()
                 toolbarManager.showShortcutFeedback(text, expansion)
             } else {
-                currentInputConnection?.commitText("$text ", 1)
+                inputHandler.commitText("$text ")
                 predictionEngine.learn(text)
             }
 
             composingText.clear()
             toolbarManager.updateSuggestions("", isNewWord = true)
         } else {
-            currentInputConnection?.commitText(" ", 1)
+            inputHandler.commitText(" ")
         }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun addPressAnimation(view: View) {
-        view.setOnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(50).start()
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    v.animate().scaleX(1f).scaleY(1f).setDuration(50).start()
-                }
-            }
-            false
-        }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupQwertyKeys() {
-        allKeys.clear()
-        specialKeys.clear()
-        letterKeys.clear()
-
-        val letterIds =
-                listOf(
-                        R.id.key_q,
-                        R.id.key_w,
-                        R.id.key_e,
-                        R.id.key_r,
-                        R.id.key_t,
-                        R.id.key_y,
-                        R.id.key_u,
-                        R.id.key_i,
-                        R.id.key_o,
-                        R.id.key_p,
-                        R.id.key_a,
-                        R.id.key_s,
-                        R.id.key_d,
-                        R.id.key_f,
-                        R.id.key_g,
-                        R.id.key_h,
-                        R.id.key_j,
-                        R.id.key_k,
-                        R.id.key_l,
-                        R.id.key_z,
-                        R.id.key_x,
-                        R.id.key_c,
-                        R.id.key_v,
-                        R.id.key_b,
-                        R.id.key_n,
-                        R.id.key_m
-                )
-
-        for (id in letterIds) {
-            val btn = keyboardView.findViewById<Button>(id)
-            letterKeys.add(btn)
-            allKeys.add(btn)
-            setupKeyWithPopup(btn)
-        }
-
-        val space = keyboardView.findViewById<Button>(R.id.key_space)
-        allKeys.add(space)
-        addPressAnimation(space)
-        space.setOnClickListener { handleSpace() }
-
-        val backspace = keyboardView.findViewById<ImageButton>(R.id.key_backspace)
-        specialKeys.add(backspace)
-        setupBackspaceImageButton(backspace)
-
-        val enter = keyboardView.findViewById<ImageButton>(R.id.key_enter)
-        specialKeys.add(enter)
-        addPressAnimation(enter)
-        enter.setOnClickListener { handleEnter() }
-
-        val shift = keyboardView.findViewById<ImageButton>(R.id.key_shift)
-        shiftButton = shift
-        specialKeys.add(shift)
-        addPressAnimation(shift)
-        shift.setOnClickListener {
-            isShifted = !isShifted
-            updateShiftState()
-        }
-
-        val comma = keyboardView.findViewById<Button>(R.id.key_comma)
-        allKeys.add(comma)
-        addPressAnimation(comma)
-        comma.setOnClickListener { sendKeyChar(",") }
-
-        val period = keyboardView.findViewById<Button>(R.id.key_period)
-        allKeys.add(period)
-        addPressAnimation(period)
-        period.setOnClickListener { sendKeyChar(".") }
-
-        val key123 = keyboardView.findViewById<Button>(R.id.key_123)
-        specialKeys.add(key123)
-        addPressAnimation(key123)
-        key123.setOnClickListener { switchToNumbers() }
-
-        val emojiKey = keyboardView.findViewById<Button>(R.id.key_emoji)
-        specialKeys.add(emojiKey)
-        addPressAnimation(emojiKey)
-        emojiKey.setOnClickListener { openEmojiBoard() }
-        applyKeyColors()
     }
 
     private fun switchToSymbols() {
         currentLayout = "symbols"
-        keyboardView = layoutInflater.inflate(R.layout.keyboard_symbols, null)
-        mainKeyboardFrame.removeAllViews()
-        mainKeyboardFrame.addView(keyboardView)
-
-        setupSymbolKeys()
-        applyTheme()
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupNumberKeys() {
-        allKeys.clear()
-        specialKeys.clear()
-
-        val numIds =
-                listOf(
-                        R.id.key_1,
-                        R.id.key_2,
-                        R.id.key_3,
-                        R.id.key_4,
-                        R.id.key_5,
-                        R.id.key_6,
-                        R.id.key_7,
-                        R.id.key_8,
-                        R.id.key_9,
-                        R.id.key_0
-                )
-        for (id in numIds) {
-            val btn = keyboardView.findViewById<Button>(id)
-            allKeys.add(btn)
-            addPressAnimation(btn)
-            btn.setOnClickListener { sendKeyChar(btn.text.toString()) }
-        }
-
-        // Row 2
-        val row2Ids =
-                listOf(
-                        R.id.key_at,
-                        R.id.key_hash,
-                        R.id.key_dollar,
-                        R.id.key_percent,
-                        R.id.key_amp,
-                        R.id.key_minus,
-                        R.id.key_plus,
-                        R.id.key_lparen,
-                        R.id.key_rparen
-                )
-        for (id in row2Ids) {
-            val btn = keyboardView.findViewById<Button>(id)
-            allKeys.add(btn)
-            addPressAnimation(btn)
-            btn.setOnClickListener { sendKeyChar(btn.text.toString()) }
-        }
-
-        // Row 3
-        val keySymbols = keyboardView.findViewById<Button>(R.id.key_symbols)
-        if (keySymbols != null) {
-            specialKeys.add(keySymbols)
-            addPressAnimation(keySymbols)
-            keySymbols.setOnClickListener { switchToSymbols() }
-        }
-
-        val row3Ids =
-                listOf(
-                        R.id.key_asterisk,
-                        R.id.key_quote,
-                        R.id.key_apos,
-                        R.id.key_colon,
-                        R.id.key_semicolon,
-                        R.id.key_excl,
-                        R.id.key_quest
-                )
-        for (id in row3Ids) {
-            val btn = keyboardView.findViewById<Button>(id)
-            allKeys.add(btn)
-            addPressAnimation(btn)
-            btn.setOnClickListener { sendKeyChar(btn.text.toString()) }
-        }
-
-        val space = keyboardView.findViewById<Button>(R.id.key_num_space)
-        allKeys.add(space)
-        addPressAnimation(space)
-        space.setOnClickListener { handleSpace() }
-
-        val backspace = keyboardView.findViewById<ImageButton>(R.id.key_num_backspace)
-        specialKeys.add(backspace)
-        setupBackspaceImageButton(backspace)
-
-        val enter = keyboardView.findViewById<ImageButton>(R.id.key_num_enter)
-        specialKeys.add(enter)
-        addPressAnimation(enter)
-        enter.setOnClickListener { handleEnter() }
-
-        val keyAbc = keyboardView.findViewById<Button>(R.id.key_abc)
-        keyAbc.setOnClickListener { switchToQwerty() }
-        addPressAnimation(keyAbc)
-        specialKeys.add(keyAbc)
-
-        val keyComma = keyboardView.findViewById<Button>(R.id.key_num_comma)
-        allKeys.add(keyComma)
-        keyComma.setOnClickListener { sendKeyChar(",") }
-        addPressAnimation(keyComma)
-
-        val keyPeriod = keyboardView.findViewById<Button>(R.id.key_num_period)
-        allKeys.add(keyPeriod)
-        keyPeriod.setOnClickListener { sendKeyChar(".") }
-        addPressAnimation(keyPeriod)
-        applyKeyColors()
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupSymbolKeys() {
-        allKeys.clear()
-        specialKeys.clear()
-
-        val symbolIds =
-                listOf(
-                        R.id.key_lbracket,
-                        R.id.key_rbracket,
-                        R.id.key_lbrace,
-                        R.id.key_rbrace,
-                        R.id.key_hash_sym,
-                        R.id.key_percent_sym,
-                        R.id.key_caret,
-                        R.id.key_asterisk_sym,
-                        R.id.key_plus_sym,
-                        R.id.key_equals_sym,
-                        R.id.key_underscore,
-                        R.id.key_backslash,
-                        R.id.key_pipe,
-                        R.id.key_tilde,
-                        R.id.key_lt,
-                        R.id.key_gt,
-                        R.id.key_dollar_sym,
-                        R.id.key_pound,
-                        R.id.key_euro,
-                        R.id.key_yen,
-                        R.id.key_div,
-                        R.id.key_mult,
-                        R.id.key_plusminus,
-                        R.id.key_neq,
-                        R.id.key_approx,
-                        R.id.key_inf,
-                        R.id.key_degree
-                )
-
-        for (id in symbolIds) {
-            val btn = keyboardView.findViewById<Button>(id)
-            if (btn != null) {
-                allKeys.add(btn)
-                addPressAnimation(btn)
-                btn.setOnClickListener { sendKeyChar(btn.text.toString()) }
-            }
-        }
-
-        val tab = keyboardView.findViewById<Button>(R.id.key_tab)
-        if (tab != null) {
-            specialKeys.add(tab)
-            addPressAnimation(tab)
-            tab.setOnClickListener { currentInputConnection?.commitText("\t", 1) }
-        }
-
-        val backspace = keyboardView.findViewById<ImageButton>(R.id.key_sym_backspace)
-        if (backspace != null) {
-            specialKeys.add(backspace)
-            setupBackspaceImageButton(backspace)
-        }
-
-        val key123 = keyboardView.findViewById<Button>(R.id.key_sym_123)
-        if (key123 != null) {
-            specialKeys.add(key123)
-            addPressAnimation(key123)
-            key123.setOnClickListener { switchToNumbers() }
-        }
-
-        val left = keyboardView.findViewById<Button>(R.id.key_arrow_left)
-        if (left != null) {
-            specialKeys.add(left)
-            addPressAnimation(left)
-            left.setOnClickListener {
-                currentInputConnection?.sendKeyEvent(
-                        KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT)
-                )
-                currentInputConnection?.sendKeyEvent(
-                        KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_LEFT)
-                )
-            }
-        }
-
-        val right = keyboardView.findViewById<Button>(R.id.key_arrow_right)
-        if (right != null) {
-            specialKeys.add(right)
-            addPressAnimation(right)
-            right.setOnClickListener {
-                currentInputConnection?.sendKeyEvent(
-                        KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT)
-                )
-                currentInputConnection?.sendKeyEvent(
-                        KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_RIGHT)
-                )
-            }
-        }
-
-        val space = keyboardView.findViewById<Button>(R.id.key_sym_space)
-        if (space != null) {
-            allKeys.add(space)
-            addPressAnimation(space)
-            space.setOnClickListener { currentInputConnection?.commitText(" ", 1) }
-        }
-
-        val enter = keyboardView.findViewById<ImageButton>(R.id.key_sym_enter)
-        if (enter != null) {
-            specialKeys.add(enter)
-            addPressAnimation(enter)
-            enter.setOnClickListener { handleEnter() }
-        }
-
-        applyKeyColors()
+        layoutManager.setupSymbolsLayout(
+                mainKeyboardFrame,
+                onSwitchToNumbers = { switchToNumbers() },
+                onSpace = { handleSpace() },
+                onEnter = { handleEnter() },
+                onBackspace = { handleBackspace() },
+                onTab = { handleTab() }
+        )
+        keyboardView = layoutManager.keyboardView!!
     }
 
     private fun updateShiftState() {
-        shiftButton?.setImageResource(
-                if (isShifted) R.drawable.ic_shift_active else R.drawable.ic_shift
-        )
-        for (btn in letterKeys) {
-            val text = btn.text.toString()
-            btn.text = if (isShifted) text.uppercase() else text.lowercase()
-        }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupBackspaceButton(backspace: Button) {
-        allKeys.add(backspace)
-        backspace.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    isDeleting = true
-                    handleBackspace()
-                    handler.postDelayed(deleteRunnable, 350)
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    isDeleting = false
-                    handler.removeCallbacks(deleteRunnable)
-                }
-            }
-            false
-        }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupBackspaceImageButton(backspace: ImageButton) {
-        allKeys.add(backspace)
-        backspace.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    backspace.animate().scaleX(0.9f).scaleY(0.9f).setDuration(50).start()
-                    isDeleting = true
-                    handleBackspace()
-                    handler.postDelayed(deleteRunnable, 350)
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    backspace.animate().scaleX(1f).scaleY(1f).setDuration(50).start()
-                    isDeleting = false
-                    handler.removeCallbacks(deleteRunnable)
-                }
-            }
-            false
-        }
+        layoutManager.updateShiftState(isShifted)
     }
 
     private fun onKeyPress(text: String) {
@@ -1124,7 +563,7 @@ class SimpleDarkKeyboard : InputMethodService() {
             translationInputField!!.append(text)
         } else {
             composingText.append(text)
-            currentInputConnection?.setComposingText(composingText, 1)
+            inputHandler.setComposingText(composingText)
 
             toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
         }
@@ -1162,6 +601,16 @@ class SimpleDarkKeyboard : InputMethodService() {
         }
     }
 
+    private fun handleTab() {
+        if (composingText.isNotEmpty()) {
+            inputHandler.commitText(composingText.toString())
+            predictionEngine.learn(composingText.toString())
+            composingText.clear()
+            toolbarManager.updateSuggestions("", isNewWord = true)
+        }
+        inputHandler.commitText("\t")
+    }
+
     private fun handleBackspace() {
         if (isGifSearchMode) {
             handleGifSearchBackspace()
@@ -1178,14 +627,14 @@ class SimpleDarkKeyboard : InputMethodService() {
                 composingText.deleteCharAt(composingText.length - 1)
 
                 if (composingText.isEmpty()) {
-                    currentInputConnection?.commitText("", 1) // Clear composing
+                    inputHandler.commitText("")
                     toolbarManager.updateSuggestions("", isNewWord = true)
                 } else {
-                    currentInputConnection?.setComposingText(composingText, 1)
+                    inputHandler.setComposingText(composingText)
                     toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
                 }
             } else {
-                currentInputConnection?.deleteSurroundingText(1, 0)
+                inputHandler.deleteBackward(1)
                 toolbarManager.updateSuggestions("", isNewWord = true)
             }
         }
@@ -1202,7 +651,7 @@ class SimpleDarkKeyboard : InputMethodService() {
         } else {
             if (composingText.isNotEmpty()) {
                 val text = composingText.toString()
-                currentInputConnection?.commitText(text, 1)
+                inputHandler.commitText(text)
 
                 predictionEngine.learn(text)
 
@@ -1210,18 +659,7 @@ class SimpleDarkKeyboard : InputMethodService() {
                 toolbarManager.updateSuggestions("", isNewWord = true)
             }
 
-            currentInputConnection?.sendKeyEvent(
-                    android.view.KeyEvent(
-                            android.view.KeyEvent.ACTION_DOWN,
-                            android.view.KeyEvent.KEYCODE_ENTER
-                    )
-            )
-            currentInputConnection?.sendKeyEvent(
-                    android.view.KeyEvent(
-                            android.view.KeyEvent.ACTION_UP,
-                            android.view.KeyEvent.KEYCODE_ENTER
-                    )
-            )
+            inputHandler.sendEnterKey()
         }
     }
 
@@ -1238,11 +676,7 @@ class SimpleDarkKeyboard : InputMethodService() {
         val keyboardHeight = keyboardView.height
         val suggestionsHeight = suggestionsStrip.height
 
-        val prefs = getSharedPreferences("keyboard_prefs", Context.MODE_PRIVATE)
-        val bgColor =
-                android.graphics.Color.parseColor(
-                        prefs.getString("bg_color", "#1C1C1E") ?: "#1C1C1E"
-                )
+        val bgColor = android.graphics.Color.parseColor(keyboardPreferences.backgroundColor)
         emojiView.setBackgroundColor(bgColor)
 
         emojiView.layoutParams =
@@ -1267,7 +701,7 @@ class SimpleDarkKeyboard : InputMethodService() {
 
         fun setupEmojiGrid() {
             kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                val emojis = EmojiManager.getEmojis(this@SimpleDarkKeyboard)
+                val emojis = EmojiManager.getEmojis(this@MPKeyboardService)
                 val localizedCategories =
                         EmojiManager.CATEGORY_ORDER
                                 .map { key ->
@@ -1277,7 +711,7 @@ class SimpleDarkKeyboard : InputMethodService() {
                                                 val resId = EmojiManager.getCategoryResId(key)
                                                 if (resId != 0) {
                                                     getStringByLocale(
-                                                            this@SimpleDarkKeyboard,
+                                                            this@MPKeyboardService,
                                                             resId,
                                                             currentLanguage
                                                     )
@@ -1323,28 +757,6 @@ class SimpleDarkKeyboard : InputMethodService() {
         toolbarManager.hideToolsPanel()
     }
 
-    private lateinit var gifStripContainer: FrameLayout
-
-    override fun onCreateInputView(): View {
-        val mainContainer =
-                layoutInflater.inflate(R.layout.layout_main_container, null) as LinearLayout
-        toolbarManager = ToolbarManager(this, mainContainer)
-        toolbarManager.setEngine(predictionEngine)
-        toolbarManager.setShortcutManager(shortcutManager)
-
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-            predictionEngine.loadLanguage(currentLanguage)
-        }
-
-        mainKeyboardFrame = mainContainer.findViewById(R.id.main_keyboard_view)
-        translationBarContainer = mainContainer.findViewById(R.id.translation_bar_container)
-        suggestionsStrip = mainContainer.findViewById(R.id.suggestions_strip)
-        gifStripContainer = mainContainer.findViewById(R.id.gif_strip_container)
-        toolsPanel = mainContainer.findViewById(R.id.tools_panel)
-        switchToQwerty()
-        return mainContainer
-    }
-
     private fun openGifSearchStrip() {
         suggestionsStrip.visibility = View.GONE
         gifStripContainer.removeAllViews()
@@ -1361,11 +773,7 @@ class SimpleDarkKeyboard : InputMethodService() {
         val btnCloseGif = gifStripView.findViewById<View>(R.id.btn_close_gif_strip)
         val recyclerGifResults = gifStripView.findViewById<RecyclerView>(R.id.recycler_gif_results)
 
-        val prefs = getSharedPreferences("keyboard_prefs", Context.MODE_PRIVATE)
-        val bgColor =
-                android.graphics.Color.parseColor(
-                        prefs.getString("bg_color", "#1C1C1E") ?: "#1C1C1E"
-                )
+        val bgColor = android.graphics.Color.parseColor(keyboardPreferences.backgroundColor)
         gifStripView.setBackgroundColor(bgColor)
 
         recyclerGifResults.layoutManager = GridLayoutManager(this, 3)
@@ -1402,8 +810,6 @@ class SimpleDarkKeyboard : InputMethodService() {
         btnCloseGif.setOnClickListener { closeGifSearch() }
     }
 
-    private var onGifSearchUpdate: ((String) -> Unit)? = null
-
     private fun closeGifSearch() {
         if (!isGifSearchMode) return
 
@@ -1433,14 +839,13 @@ class SimpleDarkKeyboard : InputMethodService() {
                 val fileName = "share_${System.currentTimeMillis()}.gif"
                 val file = File(cachePath, fileName)
 
-                val fileBytes =
-                        Glide.with(this@SimpleDarkKeyboard).asFile().load(url).submit().get()
+                val fileBytes = Glide.with(this@MPKeyboardService).asFile().load(url).submit().get()
 
                 fileBytes.copyTo(file, overwrite = true)
 
                 val contentUri: Uri =
                         FileProvider.getUriForFile(
-                                this@SimpleDarkKeyboard,
+                                this@MPKeyboardService,
                                 "${packageName}.fileprovider",
                                 file
                         )
@@ -1453,7 +858,7 @@ class SimpleDarkKeyboard : InputMethodService() {
                 e.printStackTrace()
                 withContext(kotlinx.coroutines.Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(this@SimpleDarkKeyboard, "GIF gönderilemedi", Toast.LENGTH_SHORT)
+                    Toast.makeText(this@MPKeyboardService, "GIF gönderilemedi", Toast.LENGTH_SHORT)
                             .show()
                 }
             }
@@ -1476,5 +881,25 @@ class SimpleDarkKeyboard : InputMethodService() {
                 flags,
                 null
         )
+    }
+
+    override fun onCreateInputView(): View {
+        val mainContainer =
+                layoutInflater.inflate(R.layout.layout_main_container, null) as LinearLayout
+        toolbarManager = ToolbarManager(this, mainContainer)
+        toolbarManager.setEngine(predictionEngine)
+        toolbarManager.setShortcutManager(shortcutManager)
+
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            predictionEngine.loadLanguage(currentLanguage)
+        }
+
+        mainKeyboardFrame = mainContainer.findViewById(R.id.main_keyboard_view)
+        translationBarContainer = mainContainer.findViewById(R.id.translation_bar_container)
+        suggestionsStrip = mainContainer.findViewById(R.id.suggestions_strip)
+        gifStripContainer = mainContainer.findViewById(R.id.gif_strip_container)
+        toolsPanel = mainContainer.findViewById(R.id.tools_panel)
+        switchToQwerty()
+        return mainContainer
     }
 }

@@ -1,4 +1,4 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.settings
 
 import android.content.Context
 import android.content.Intent
@@ -16,8 +16,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.samiuysal.keyboard.R
+import com.samiuysal.keyboard.features.shortcuts.ShortcutAdapter
+import com.samiuysal.keyboard.features.shortcuts.ShortcutManager
 
 class SettingsFragment : Fragment() {
+
+    companion object {
+        const val ACTION_THEME_CHANGED = "com.samiuysal.keyboard.ACTION_THEME_CHANGED"
+    }
 
     private var selectedBgColor = "#000000"
     private var selectedKeyColor = "#3A3A3C"
@@ -80,11 +87,7 @@ class SettingsFragment : Fragment() {
 
     private fun showLanguageDialog(parentView: View) {
         val dialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme)
-        val view =
-                layoutInflater.inflate(
-                        R.layout.dialog_language,
-                        null
-                ) // We need to create this layout
+        val view = layoutInflater.inflate(R.layout.dialog_language, null)
         dialog.setContentView(view)
 
         view.findViewById<View>(R.id.langTurkish).setOnClickListener {
@@ -95,8 +98,7 @@ class SettingsFragment : Fragment() {
                     .apply()
             requireContext()
                     .sendBroadcast(
-                            Intent(SimpleDarkKeyboard.ACTION_THEME_CHANGED)
-                                    .setPackage(requireContext().packageName)
+                            Intent(ACTION_THEME_CHANGED).setPackage(requireContext().packageName)
                     )
             dialog.dismiss()
             requireActivity().recreate()
@@ -110,8 +112,7 @@ class SettingsFragment : Fragment() {
                     .apply()
             requireContext()
                     .sendBroadcast(
-                            Intent(SimpleDarkKeyboard.ACTION_THEME_CHANGED)
-                                    .setPackage(requireContext().packageName)
+                            Intent(ACTION_THEME_CHANGED).setPackage(requireContext().packageName)
                     )
             dialog.dismiss()
             requireActivity().recreate()
@@ -188,8 +189,7 @@ class SettingsFragment : Fragment() {
                     .apply()
             requireContext()
                     .sendBroadcast(
-                            Intent(SimpleDarkKeyboard.ACTION_THEME_CHANGED)
-                                    .setPackage(requireContext().packageName)
+                            Intent(ACTION_THEME_CHANGED).setPackage(requireContext().packageName)
                     )
             Toast.makeText(
                             requireContext(),

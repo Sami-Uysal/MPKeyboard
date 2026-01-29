@@ -1,10 +1,11 @@
-package com.samiuysal.keyboard
+package com.samiuysal.keyboard.features.emoji
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.samiuysal.keyboard.R
 
 class EmojiAdapter(
         private var emojis: List<EmojiData>,
@@ -69,9 +70,7 @@ class CategoryAdapter(
             textView.text = category.displayName
 
             if (isSelected) {
-                textView.setBackgroundResource(
-                        R.drawable.button_secondary
-                )
+                textView.setBackgroundResource(R.drawable.button_secondary)
                 textView.alpha = 1.0f
             } else {
                 textView.background = null
@@ -80,7 +79,7 @@ class CategoryAdapter(
 
             itemView.setOnClickListener {
                 val previousSelected = selectedPosition
-                selectedPosition = adapterPosition
+                selectedPosition = bindingAdapterPosition
                 notifyItemChanged(previousSelected)
                 notifyItemChanged(selectedPosition)
                 onCategoryClick(category.key)
