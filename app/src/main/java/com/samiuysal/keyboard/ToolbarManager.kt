@@ -18,6 +18,7 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
     private val suggestionsRecycler: RecyclerView = rootView.findViewById(R.id.recycler_suggestions)
     private lateinit var suggestionAdapter: SuggestionAdapter
     private var predictionEngine: PredictionEngine? = null
+    private var shortcutManager: ShortcutManager? = null
 
     // Tool Buttons
     private val btnClipboard: ImageView = rootView.findViewById(R.id.tool_clipboard)
@@ -109,17 +110,42 @@ class ToolbarManager(private val service: SimpleDarkKeyboard, private val rootVi
     fun updateSuggestions(text: String, isNewWord: Boolean) {
         if (predictionEngine == null) return
 
-        val suggestions = predictionEngine!!.getPredictions(text)
+        // Check if the typed text matches a shortcut
+        val shortcutExpansion = shortcutManager?.getExpansion(text)
 
         service.handler.post {
-            suggestionAdapter.setSuggestions(suggestions)
-            if (suggestions.isNotEmpty()) {
+            if (shortcutExpansion != null && text.isNotEmpty()) {
+                // Show shortcut expansion - clicking it will insert it directly
+                suggestionAdapter.setSuggestions(listOf(shortcutExpansion))
                 suggestionsRecycler.scrollToPosition(0)
+            } else {
+                // Show normal predictions
+                val suggestions = predictionEngine!!.getPredictions(text)
+                suggestionAdapter.setSuggestions(suggestions)
+                if (suggestions.isNotEmpty()) {
+                    suggestionsRecycler.scrollToPosition(0)
+                }
             }
+        }
+    }
+
+    fun showShortcutFeedback(trigger: String, expansion: String) {
+        service.handler.post {
+            // Show shortcut feedback as a special suggestion
+            val feedbackText = "⚡ \"$trigger\" → \"$expansion\""
+            suggestionAdapter.setSuggestions(listOf(feedbackText))
+            suggestionsRecycler.scrollToPosition(0)
+
+            // After 2 seconds, clear the feedback and restore normal suggestions
+            service.handler.postDelayed({ suggestionAdapter.setSuggestions(emptyList()) }, 2000)
         }
     }
 
     fun setEngine(engine: PredictionEngine) {
         this.predictionEngine = engine
+    }
+
+    fun setShortcutManager(manager: ShortcutManager) {
+        this.shortcutManager = manager
     }
 }

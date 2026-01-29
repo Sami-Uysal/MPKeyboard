@@ -37,4 +37,20 @@
     <string name="category_symbols">Semboller</string>
     <string name="category_flags">Bayraklar</string>
     <string name="search_gifs">GIF Ara...</string>
+
+    <string name="btn_shortcuts">⌨️ Metin Kısayolları</string>
+    <string name="title_shortcuts">Metin Kısayolları</string>
+    <string name="title_add_shortcut">Kısayol Ekle</string>
+    <string name="title_edit_shortcut">Kısayolu Düzenle</string>
+    <string name="hint_shortcut_trigger">Kısayol (örn: iban)</string>
+    <string name="hint_shortcut_replacement">Yazılacak metin</string>
+    <string name="hint_shortcut_example">Örnek: "iban" yazınca → IBAN numaranız görünür</string>
+    <string name="btn_add_shortcut">Ekle</string>
+    <string name="btn_save">Kaydet</string>
+    <string name="btn_cancel">İptal</string>
+    <string name="msg_no_shortcuts">Henüz kısayol yok.\n+ ile ekleyin!</string>
+    <string name="msg_shortcut_saved">Kısayol kaydedildi!</string>
+    <string name="msg_shortcut_deleted">Kısayol silindi</string>
+    <string name="msg_shortcut_error">Kısayol kaydedilemedi</string>
+    <string name="msg_shortcut_exists">Bu kısayol zaten mevcut</string>
 </resources>

@@ -37,4 +37,20 @@
     <string name="category_symbols">Symbols</string>
     <string name="category_flags">Flags</string>
     <string name="search_gifs">Search GIFs...</string>
+
+    <string name="btn_shortcuts">⌨️ Text Shortcuts</string>
+    <string name="title_shortcuts">Text Shortcuts</string>
+    <string name="title_add_shortcut">Add Shortcut</string>
+    <string name="title_edit_shortcut">Edit Shortcut</string>
+    <string name="hint_shortcut_trigger">Shortcut (e.g. iban)</string>
+    <string name="hint_shortcut_replacement">Text to insert</string>
+    <string name="hint_shortcut_example">Example: Type "iban" → Your IBAN number appears</string>
+    <string name="btn_add_shortcut">Add</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="msg_no_shortcuts">No shortcuts yet.\nTap + to add one!</string>
+    <string name="msg_shortcut_saved">Shortcut saved!</string>
+    <string name="msg_shortcut_deleted">Shortcut deleted</string>
+    <string name="msg_shortcut_error">Could not save shortcut</string>
+    <string name="msg_shortcut_exists">This shortcut already exists</string>
 </resources>

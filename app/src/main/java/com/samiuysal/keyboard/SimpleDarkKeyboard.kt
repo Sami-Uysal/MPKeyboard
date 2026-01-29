@@ -56,6 +56,7 @@ class SimpleDarkKeyboard : InputMethodService() {
 
     private var composingText = StringBuilder()
     private val predictionEngine by lazy { PredictionEngine(this) }
+    private val shortcutManager by lazy { ShortcutManager(this) }
 
     private var isShifted = false
     private var isCapsLocked = false
@@ -714,8 +715,18 @@ class SimpleDarkKeyboard : InputMethodService() {
 
         if (composingText.isNotEmpty()) {
             val text = composingText.toString()
-            currentInputConnection?.commitText("$text ", 1)
-            predictionEngine.learn(text)
+
+            val expansion = shortcutManager.getExpansion(text)
+            if (expansion != null) {
+                currentInputConnection?.finishComposingText()
+                currentInputConnection?.deleteSurroundingText(text.length, 0)
+                currentInputConnection?.commitText("$expansion ", 1)
+                toolbarManager.showShortcutFeedback(text, expansion)
+            } else {
+                currentInputConnection?.commitText("$text ", 1)
+                predictionEngine.learn(text)
+            }
+
             composingText.clear()
             toolbarManager.updateSuggestions("", isNewWord = true)
         } else {
@@ -1319,6 +1330,7 @@ class SimpleDarkKeyboard : InputMethodService() {
                 layoutInflater.inflate(R.layout.layout_main_container, null) as LinearLayout
         toolbarManager = ToolbarManager(this, mainContainer)
         toolbarManager.setEngine(predictionEngine)
+        toolbarManager.setShortcutManager(shortcutManager)
 
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
             predictionEngine.loadLanguage(currentLanguage)
@@ -1339,17 +1351,13 @@ class SimpleDarkKeyboard : InputMethodService() {
         gifStripContainer.visibility = View.VISIBLE
 
         val params = gifStripContainer.layoutParams
-        params.height =
-                (resources.displayMetrics.density * 160).toInt()
+        params.height = (resources.displayMetrics.density * 160).toInt()
         gifStripContainer.layoutParams = params
 
         val gifStripView = layoutInflater.inflate(R.layout.layout_gif_strip, null)
         gifStripContainer.addView(gifStripView)
 
-        val inputGifSearch =
-                gifStripView.findViewById<TextView>(
-                        R.id.input_gif_search_strip
-                )
+        val inputGifSearch = gifStripView.findViewById<TextView>(R.id.input_gif_search_strip)
         val btnCloseGif = gifStripView.findViewById<View>(R.id.btn_close_gif_strip)
         val recyclerGifResults = gifStripView.findViewById<RecyclerView>(R.id.recycler_gif_results)
 
