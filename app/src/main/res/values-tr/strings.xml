@@ -65,4 +65,16 @@
     <string name="msg_password_saved">Parola kaydedildi!</string>
     <string name="msg_password_deleted">Parola silindi</string>
     <string name="msg_password_error">Parola kaydedilemedi</string>
+    <!-- Accessibility Disclosure -->
+    <string name="accessibility_disclosure_title">Erişilebilirlik İzni Gerekli</string>
+    <string name="accessibility_disclosure_message"> MP Klavye, Parola Yöneticisi özelliğini
+        sağlamak için Erişilebilirlik Hizmeti API\'sini kullanır.\n\n <b>Neden gerekli?</b>\n Bu
+        izin, ziyaret ettiğiniz web sitesi adresini ve ekrandaki giriş alanlarını algılamamıza
+        olanak tanır. Bu sayede kayıtlı parolalarınızı doğru bir şekilde önerebilir ve otomatik
+        olarak doldurabiliriz.\n\n <b>Gizlilik Güvencesi</b>\n Kişisel verilerinizi toplamıyor veya
+        üçüncü taraflarla paylaşmıyoruz. Tüm parolalarınız ve verileriniz şifrelenir ve yalnızca
+        cihazınızda yerel olarak saklanır.\n\n Bu özelliği kullanmak için lütfen bir sonraki ekranda
+        "MP Keyboard" için Erişilebilirlik Hizmetini etkinleştirin. </string>
+    <string name="accessibility_disclosure_accept">Servisi Etkinleştir</string>
+    <string name="accessibility_disclosure_deny">Şimdi Değil</string>
 </resources>

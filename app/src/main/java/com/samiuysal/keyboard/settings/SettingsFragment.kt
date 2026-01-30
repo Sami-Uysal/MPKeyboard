@@ -69,7 +69,16 @@ class SettingsFragment : Fragment() {
 
         view.findViewById<View>(R.id.btnShortcuts).setOnClickListener { showShortcutsDialog() }
 
-        view.findViewById<View>(R.id.btnPasswords).setOnClickListener { showPasswordsDialog() }
+        view.findViewById<View>(R.id.btnPasswords).setOnClickListener {
+            if (com.samiuysal.keyboard.service.MPAccessibilityService.isServiceEnabled(
+                            requireContext()
+                    )
+            ) {
+                showPasswordsDialog()
+            } else {
+                showAccessibilityDisclosureDialog()
+            }
+        }
     }
 
     override fun onResume() {
@@ -543,6 +552,23 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun showAccessibilityDisclosureDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.accessibility_disclosure_title)
+                .setMessage(
+                        android.text.Html.fromHtml(
+                                getString(R.string.accessibility_disclosure_message),
+                                android.text.Html.FROM_HTML_MODE_COMPACT
+                        )
+                )
+                .setPositiveButton(R.string.accessibility_disclosure_accept) { _, _ ->
+                    val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    startActivity(intent)
+                }
+                .setNegativeButton(R.string.accessibility_disclosure_deny, null)
+                .show()
     }
 
     private fun deletePassword(

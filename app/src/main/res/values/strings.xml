@@ -65,4 +65,15 @@
     <string name="msg_password_saved">Password saved!</string>
     <string name="msg_password_deleted">Password deleted</string>
     <string name="msg_password_error">Could not save password</string>
+    <!-- Accessibility Disclosure -->
+    <string name="accessibility_disclosure_title">Accessibility Permission Needed</string>
+    <string name="accessibility_disclosure_message"> MP Keyboard uses the Accessibility Service API
+        to provide the Password Manager feature.\n\n <b>Why is this needed?</b>\n This permission
+        allows the app to detect the website URL you are visiting and the login fields on the
+        screen. This enables us to suggest and auto-fill your saved passwords correctly.\n\n <b>Privacy
+        Assurance</b>\n We do not collect or share your personal data with any third parties. All
+        your passwords and data are encrypted and stored locally on your device only.\n\n Please
+        enable the Accessibility Service for "MP Keyboard" in the next screen to use this feature. </string>
+    <string name="accessibility_disclosure_accept">Enable Service</string>
+    <string name="accessibility_disclosure_deny">Not Now</string>
 </resources>

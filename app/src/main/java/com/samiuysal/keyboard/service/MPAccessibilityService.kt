@@ -49,6 +49,26 @@ class MPAccessibilityService : AccessibilityService() {
                         "url_field",
                         "mozac_browser_toolbar_url_view"
                 )
+
+        fun isServiceEnabled(context: android.content.Context): Boolean {
+            val componentName =
+                    android.content.ComponentName(context, MPAccessibilityService::class.java)
+            val enabledServicesSetting =
+                    android.provider.Settings.Secure.getString(
+                            context.contentResolver,
+                            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+                    )
+                            ?: return false
+            val colonSplitter = android.text.TextUtils.SimpleStringSplitter(':')
+            colonSplitter.setString(enabledServicesSetting)
+            while (colonSplitter.hasNext()) {
+                val componentNameString = colonSplitter.next()
+                val enabledComponent =
+                        android.content.ComponentName.unflattenFromString(componentNameString)
+                if (enabledComponent != null && enabledComponent == componentName) return true
+            }
+            return false
+        }
     }
 
     @Suppress("DEPRECATION")
