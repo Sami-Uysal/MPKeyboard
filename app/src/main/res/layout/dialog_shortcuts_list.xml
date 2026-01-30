@@ -31,7 +31,7 @@
             app:icon="@drawable/ic_add"
             app:iconGravity="start"
             app:backgroundTint="#2563EB"
-            app:cornerRadius="20dp"
+            app:cornerRadius="16dp"
             android:textSize="12sp" />
 
     </LinearLayout>

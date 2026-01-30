@@ -62,6 +62,17 @@
                 android:tooltipText="Translate"
                 android:background="?android:selectableItemBackground" />
 
+            <!-- Password Tool -->
+            <ImageView
+                android:id="@+id/tool_password"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:src="@drawable/ic_tool_password"
+                android:tooltipText="Passwords"
+                android:background="?android:selectableItemBackground" />
+
             <!-- Theme Tool -->
             <ImageView
                 android:id="@+id/tool_theme"

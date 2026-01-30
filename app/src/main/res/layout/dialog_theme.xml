@@ -147,7 +147,7 @@
         android:textColor="@color/button_text"
         android:textSize="16sp"
         android:textAllCaps="false"
-        app:cornerRadius="14dp"
+        app:cornerRadius="16dp"
         app:backgroundTint="@color/button_primary"
         android:fontFamily="sans-serif-medium" />
 

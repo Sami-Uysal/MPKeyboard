@@ -51,6 +51,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.util.concurrent.Executors
 import javax.inject.Inject
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
@@ -59,10 +60,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 @AndroidEntryPoint
 class MPKeyboardService : InputMethodService() {
 
+    private val serviceScope =
+            kotlinx.coroutines.CoroutineScope(
+                    kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main
+            )
+
     @Inject lateinit var inputHandler: com.samiuysal.keyboard.features.keyboard.InputHandler
     @Inject lateinit var keyboardManager: com.samiuysal.keyboard.features.keyboard.KeyboardManager
     @Inject
     lateinit var keyboardPreferences: com.samiuysal.keyboard.core.preferences.KeyboardPreferences
+    @Inject lateinit var passwordManager: com.samiuysal.keyboard.features.password.PasswordManager
 
     private lateinit var layoutManager:
             com.samiuysal.keyboard.features.keyboard.KeyboardLayoutManager
@@ -90,6 +97,7 @@ class MPKeyboardService : InputMethodService() {
     private lateinit var clipboardManager: KeyboardClipboardManager
 
     private var clipboardView: View? = null
+    private var passwordView: View? = null
     private var translationView: View? = null
     private var translationInputField: TextView? = null
     private var isTranslationMode = false
@@ -203,12 +211,7 @@ class MPKeyboardService : InputMethodService() {
 
     fun openClipboardFeature() {
         closeGifSearch()
-        val parent = mainKeyboardFrame.parent as? android.view.ViewGroup
-        if (parent != null) {
-            val transition = android.transition.Fade()
-            transition.duration = 200
-            android.transition.TransitionManager.beginDelayedTransition(parent, transition)
-        }
+
         val keyboardHeight = keyboardView.height
         val suggestionsHeight = suggestionsStrip.height
 
@@ -237,8 +240,134 @@ class MPKeyboardService : InputMethodService() {
         mainKeyboardFrame.addView(clipboardView)
 
         suggestionsStrip.visibility = View.GONE
-        toolbarManager.hideToolsPanel()
+        toolbarManager.hideToolsPanel(animate = false)
         applyTheme()
+    }
+
+    fun openPasswordFeature() {
+        closeGifSearch()
+
+        val keyboardHeight = keyboardView.height
+        val suggestionsHeight = suggestionsStrip.height
+
+        passwordView = layoutInflater.inflate(R.layout.keyboard_password, null)
+        passwordView!!.layoutParams =
+                FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        if (keyboardHeight > 0) keyboardHeight + suggestionsHeight else 600
+                )
+
+        val recycler = passwordView!!.findViewById<RecyclerView>(R.id.recyclerPasswords)
+        recycler.layoutManager = LinearLayoutManager(this)
+
+        val emptyView = passwordView!!.findViewById<View>(R.id.txtEmptyPasswords)
+        val currentPackage = getCurrentPackageName()
+
+        val adapter =
+                com.samiuysal.keyboard.features.password.PasswordPanelAdapter(
+                        onFillUsername = { username -> inputHandler.commitText(username) },
+                        onFillPassword = { password -> inputHandler.commitText(password) }
+                )
+        recycler.adapter = adapter
+
+        // Load passwords for current package
+        serviceScope.launch {
+            com.samiuysal.keyboard.data.AppDatabase.getInstance(this@MPKeyboardService)
+                    .passwordDao()
+                    .getByPackageName(currentPackage)
+                    .collect { passwords ->
+                        handler.post {
+                            if (passwords.isEmpty()) {
+                                emptyView.visibility = View.VISIBLE
+                                recycler.visibility = View.GONE
+                            } else {
+                                emptyView.visibility = View.GONE
+                                recycler.visibility = View.VISIBLE
+                                adapter.setPasswords(
+                                        passwords.map { entity ->
+                                            com.samiuysal.keyboard.data.password.Password(
+                                                    id = entity.id,
+                                                    siteName = entity.siteName,
+                                                    packageName = entity.packageName,
+                                                    username = entity.username,
+                                                    password =
+                                                            try {
+                                                                com.samiuysal.keyboard.data.password
+                                                                        .PasswordCrypto()
+                                                                        .decrypt(
+                                                                                entity.encryptedPassword
+                                                                        )
+                                                            } catch (e: Exception) {
+                                                                ""
+                                                            }
+                                            )
+                                        }
+                                )
+                            }
+                        }
+                    }
+        }
+
+        passwordView!!.findViewById<View>(R.id.btnClosePassword).setOnClickListener {
+            suggestionsStrip.visibility = View.VISIBLE
+            switchToQwerty()
+        }
+
+        passwordView!!.findViewById<View>(R.id.btnAddPassword).setOnClickListener {
+            // Direct save to DB without opening settings
+            val currentUrl = MPAccessibilityService.currentUrl
+            val currentPkg =
+                    MPAccessibilityService.currentPackage.ifEmpty { getCurrentPackageName() }
+            val siteName =
+                    if (currentUrl.isNotEmpty() && currentUrl != currentPkg) currentUrl
+                    else currentPkg
+            val currentText = currentInputConnection?.getTextBeforeCursor(100, 0)?.toString() ?: ""
+
+            val inputType = currentInputEditorInfo?.inputType ?: 0
+            val isPasswordField =
+                    (inputType and android.text.InputType.TYPE_MASK_VARIATION) ==
+                            android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                            (inputType and android.text.InputType.TYPE_MASK_VARIATION) ==
+                                    android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD ||
+                            (inputType and android.text.InputType.TYPE_MASK_VARIATION) ==
+                                    android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+
+            val capturedUsername =
+                    if (!isPasswordField && currentText.isNotEmpty()) currentText else ""
+            val capturedPassword =
+                    if (isPasswordField && currentText.isNotEmpty()) currentText else ""
+
+            if (siteName.isEmpty()) {
+                Toast.makeText(this, "Site bilgisi alınamadı", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            passwordManager.savePassword(
+                    siteName = siteName,
+                    packageName = currentPkg,
+                    username = capturedUsername,
+                    password = capturedPassword
+            ) { success ->
+                Handler(Looper.getMainLooper()).post {
+                    if (success) {
+                        Toast.makeText(this, "Parola Kaydedildi", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Hata oluştu", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        mainKeyboardFrame.removeAllViews()
+        mainKeyboardFrame.addView(passwordView)
+
+        suggestionsStrip.visibility = View.GONE
+        toolbarManager.hideToolsPanel(animate = false)
+        applyTheme()
+    }
+
+    private fun getCurrentPackageName(): String {
+        return currentInputEditorInfo?.packageName ?: ""
     }
 
     fun openTranslationFeature() {
@@ -407,12 +536,13 @@ class MPKeyboardService : InputMethodService() {
         super.onDestroy()
         unregisterReceiver(themeReceiver)
         executor.shutdown()
+        serviceScope.cancel()
     }
 
     private fun applyTheme() {
         currentLanguage = keyboardPreferences.language
 
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        serviceScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             predictionEngine.loadLanguage(currentLanguage)
         }
 
@@ -441,10 +571,17 @@ class MPKeyboardService : InputMethodService() {
             translationBarContainer.setBackgroundColor(parsedBgColor)
         }
         clipboardView?.setBackgroundColor(parsedBgColor)
+        passwordView?.setBackgroundColor(parsedBgColor)
 
         clipboardView?.findViewById<RecyclerView>(R.id.clipboardList)?.adapter?.let {
             if (it is ClipboardAdapter) {
                 it.setTheme(parsedKeyColor, Color.WHITE)
+            }
+        }
+
+        passwordView?.findViewById<RecyclerView>(R.id.recyclerPasswords)?.adapter?.let {
+            if (it is com.samiuysal.keyboard.features.password.PasswordPanelAdapter) {
+                it.setTheme(Color.WHITE)
             }
         }
     }
@@ -494,10 +631,26 @@ class MPKeyboardService : InputMethodService() {
         } else if (isTranslationMode && translationInputField != null) {
             translationInputField!!.append(text)
         } else {
-            composingText.append(text)
-            inputHandler.setComposingText(composingText)
-            toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
+            // Password fields don't support composing text - commit directly
+            if (isPasswordField()) {
+                inputHandler.commitText(text)
+            } else {
+                composingText.append(text)
+                inputHandler.setComposingText(composingText)
+                toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
+            }
         }
+    }
+
+    private fun isPasswordField(): Boolean {
+        val inputType = currentInputEditorInfo?.inputType ?: 0
+        val variation = inputType and android.text.InputType.TYPE_MASK_VARIATION
+        val clazz = inputType and android.text.InputType.TYPE_MASK_CLASS
+
+        return clazz == android.text.InputType.TYPE_CLASS_TEXT &&
+                (variation == android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                        variation == android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD ||
+                        variation == android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
     }
 
     private fun handleSpace() {
@@ -562,10 +715,14 @@ class MPKeyboardService : InputMethodService() {
         } else if (isTranslationMode && translationInputField != null) {
             translationInputField!!.append(text)
         } else {
-            composingText.append(text)
-            inputHandler.setComposingText(composingText)
-
-            toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
+            // Password fields don't support composing text - commit directly
+            if (isPasswordField()) {
+                inputHandler.commitText(text)
+            } else {
+                composingText.append(text)
+                inputHandler.setComposingText(composingText)
+                toolbarManager.updateSuggestions(composingText.toString(), isNewWord = false)
+            }
         }
     }
 
@@ -659,7 +816,7 @@ class MPKeyboardService : InputMethodService() {
                 toolbarManager.updateSuggestions("", isNewWord = true)
             }
 
-            inputHandler.sendEnterKey()
+            inputHandler.sendEnterKey(currentInputEditorInfo)
         }
     }
 

@@ -53,4 +53,16 @@
     <string name="msg_shortcut_deleted">Shortcut deleted</string>
     <string name="msg_shortcut_error">Could not save shortcut</string>
     <string name="msg_shortcut_exists">This shortcut already exists</string>
+
+    <!-- Password Manager -->
+    <string name="label_text_data">TEXT &amp; DATA</string>
+    <string name="btn_passwords">Passwords</string>
+    <string name="password_panel_title">Passwords</string>
+    <string name="password_empty">No passwords saved for this app</string>
+    <string name="password_site">Site/App Name</string>
+    <string name="password_username">Username</string>
+    <string name="password_password">Password</string>
+    <string name="msg_password_saved">Password saved!</string>
+    <string name="msg_password_deleted">Password deleted</string>
+    <string name="msg_password_error">Could not save password</string>
 </resources>

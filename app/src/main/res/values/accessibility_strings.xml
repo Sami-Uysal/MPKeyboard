@@ -1,0 +1,5 @@
+<resources>
+    <string name="accessibility_service_description">MPKeyboard Accessibility Service allows the
+        keyboard to detect the current website URL to help you save and autofill passwords.</string>
+    <string name="accessibility_service_label">MPKeyboard Auto-fill Helper</string>
+</resources>

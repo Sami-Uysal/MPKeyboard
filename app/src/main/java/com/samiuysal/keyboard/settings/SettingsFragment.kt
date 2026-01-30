@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -19,6 +20,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samiuysal.keyboard.R
 import com.samiuysal.keyboard.features.shortcuts.ShortcutAdapter
 import com.samiuysal.keyboard.features.shortcuts.ShortcutManager
+import kotlinx.coroutines.launch
 
 class SettingsFragment : Fragment() {
 
@@ -66,6 +68,8 @@ class SettingsFragment : Fragment() {
         view.findViewById<View>(R.id.btnLanguage).setOnClickListener { showLanguageDialog(view) }
 
         view.findViewById<View>(R.id.btnShortcuts).setOnClickListener { showShortcutsDialog() }
+
+        view.findViewById<View>(R.id.btnPasswords).setOnClickListener { showPasswordsDialog() }
     }
 
     override fun onResume() {
@@ -73,6 +77,10 @@ class SettingsFragment : Fragment() {
         if (requireActivity().intent.getBooleanExtra("ACTION_OPEN_THEME", false)) {
             showThemeDialog()
             requireActivity().intent.removeExtra("ACTION_OPEN_THEME")
+        }
+        if (requireActivity().intent.getBooleanExtra("ACTION_OPEN_PASSWORDS", false)) {
+            showPasswordsDialog()
+            requireActivity().intent.removeExtra("ACTION_OPEN_PASSWORDS")
         }
     }
 
@@ -348,5 +356,235 @@ class SettingsFragment : Fragment() {
         }
 
         dialog.show()
+    }
+
+    private fun showPasswordsDialog() {
+        val dialogView =
+                LayoutInflater.from(requireContext()).inflate(R.layout.dialog_passwords_list, null)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(dialogView)
+
+        val recycler = dialogView.findViewById<RecyclerView>(R.id.recyclerPasswords)
+        recycler.layoutManager = LinearLayoutManager(requireContext())
+        val emptyView = dialogView.findViewById<View>(R.id.txtEmptyPasswords)
+
+        val adapter =
+                com.samiuysal.keyboard.features.password.PasswordSettingsAdapter(
+                        onEditClick = { password -> showEditPasswordDialog(dialog, password) },
+                        onDeleteClick = { password -> deletePassword(dialog, password) }
+                )
+        recycler.adapter = adapter
+
+        loadPasswords(adapter, emptyView, recycler)
+
+        dialogView.findViewById<View>(R.id.btnAddPassword).setOnClickListener {
+            dialog.dismiss()
+            showAddPasswordDialog()
+        }
+
+        dialog.show()
+    }
+
+    private fun loadPasswords(
+            adapter: com.samiuysal.keyboard.features.password.PasswordSettingsAdapter,
+            emptyView: View,
+            recycler: RecyclerView
+    ) {
+        lifecycleScope.launch {
+            com.samiuysal.keyboard.data.AppDatabase.getInstance(requireContext())
+                    .passwordDao()
+                    .getAll()
+                    .collect { entities ->
+                        requireActivity().runOnUiThread {
+                            val crypto = com.samiuysal.keyboard.data.password.PasswordCrypto()
+                            val passwords =
+                                    entities.map { entity ->
+                                        com.samiuysal.keyboard.data.password.Password(
+                                                id = entity.id,
+                                                siteName = entity.siteName,
+                                                packageName = entity.packageName,
+                                                username = entity.username,
+                                                password =
+                                                        try {
+                                                            crypto.decrypt(entity.encryptedPassword)
+                                                        } catch (e: Exception) {
+                                                            ""
+                                                        }
+                                        )
+                                    }
+                            if (passwords.isEmpty()) {
+                                emptyView.visibility = View.VISIBLE
+                                recycler.visibility = View.GONE
+                            } else {
+                                emptyView.visibility = View.GONE
+                                recycler.visibility = View.VISIBLE
+                                adapter.setPasswords(passwords)
+                            }
+                        }
+                    }
+        }
+    }
+
+    private fun showAddPasswordDialog() {
+        val dialogView =
+                LayoutInflater.from(requireContext()).inflate(R.layout.dialog_password, null)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(dialogView)
+
+        dialogView.findViewById<TextView>(R.id.txtPasswordDialogTitle).text =
+                getString(R.string.btn_add_shortcut)
+
+        // Note: PREFILL logic removed - direct DB save is now handled by MPKeyboardService
+
+        dialogView.findViewById<View>(R.id.btnCancelPassword).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnSavePassword).setOnClickListener {
+            val siteName =
+                    dialogView.findViewById<EditText>(R.id.editSiteName).text.toString().trim()
+            val username =
+                    dialogView.findViewById<EditText>(R.id.editUsername).text.toString().trim()
+            val password = dialogView.findViewById<EditText>(R.id.editPassword).text.toString()
+
+            if (siteName.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty()) {
+                savePassword(null, siteName, siteName, username, password)
+                dialog.dismiss()
+                showPasswordsDialog()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun showEditPasswordDialog(
+            parentDialog: BottomSheetDialog,
+            password: com.samiuysal.keyboard.data.password.Password
+    ) {
+        parentDialog.dismiss()
+        val dialogView =
+                LayoutInflater.from(requireContext()).inflate(R.layout.dialog_password, null)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(dialogView)
+
+        dialogView.findViewById<TextView>(R.id.txtPasswordDialogTitle).text =
+                getString(R.string.title_edit_shortcut)
+        dialogView.findViewById<EditText>(R.id.editSiteName).setText(password.siteName)
+        dialogView.findViewById<EditText>(R.id.editUsername).setText(password.username)
+        dialogView.findViewById<EditText>(R.id.editPassword).setText(password.password)
+
+        dialogView.findViewById<View>(R.id.btnCancelPassword).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnSavePassword).setOnClickListener {
+            val siteName =
+                    dialogView.findViewById<EditText>(R.id.editSiteName).text.toString().trim()
+            val username =
+                    dialogView.findViewById<EditText>(R.id.editUsername).text.toString().trim()
+            val passwordText = dialogView.findViewById<EditText>(R.id.editPassword).text.toString()
+
+            if (siteName.isNotEmpty() && username.isNotEmpty() && passwordText.isNotEmpty()) {
+                savePassword(password.id, siteName, siteName, username, passwordText)
+                dialog.dismiss()
+                showPasswordsDialog()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun savePassword(
+            id: Long?,
+            siteName: String,
+            packageName: String,
+            username: String,
+            password: String
+    ) {
+        lifecycleScope.launch {
+            try {
+                val crypto = com.samiuysal.keyboard.data.password.PasswordCrypto()
+                val encryptedPassword = crypto.encrypt(password)
+                val dao =
+                        com.samiuysal.keyboard.data.AppDatabase.getInstance(requireContext())
+                                .passwordDao()
+
+                val entity =
+                        com.samiuysal.keyboard.data.password.PasswordEntity(
+                                id = id ?: 0,
+                                siteName = siteName,
+                                packageName = packageName,
+                                username = username,
+                                encryptedPassword = encryptedPassword
+                        )
+
+                if (id == null) {
+                    dao.insert(entity)
+                } else {
+                    dao.update(entity)
+                }
+
+                requireActivity().runOnUiThread {
+                    Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.msg_password_saved),
+                                    Toast.LENGTH_SHORT
+                            )
+                            .show()
+                }
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread {
+                    Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.msg_password_error),
+                                    Toast.LENGTH_SHORT
+                            )
+                            .show()
+                }
+            }
+        }
+    }
+
+    private fun deletePassword(
+            parentDialog: BottomSheetDialog,
+            password: com.samiuysal.keyboard.data.password.Password
+    ) {
+        lifecycleScope.launch {
+            try {
+                val dao =
+                        com.samiuysal.keyboard.data.AppDatabase.getInstance(requireContext())
+                                .passwordDao()
+                val crypto = com.samiuysal.keyboard.data.password.PasswordCrypto()
+                val entity =
+                        com.samiuysal.keyboard.data.password.PasswordEntity(
+                                id = password.id,
+                                siteName = password.siteName,
+                                packageName = password.packageName,
+                                username = password.username,
+                                encryptedPassword = crypto.encrypt(password.password)
+                        )
+                dao.delete(entity)
+
+                requireActivity().runOnUiThread {
+                    Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.msg_password_deleted),
+                                    Toast.LENGTH_SHORT
+                            )
+                            .show()
+                    parentDialog.dismiss()
+                    showPasswordsDialog()
+                }
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread {
+                    Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.msg_password_error),
+                                    Toast.LENGTH_SHORT
+                            )
+                            .show()
+                }
+            }
+        }
     }
 }

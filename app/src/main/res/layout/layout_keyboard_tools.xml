@@ -87,6 +87,17 @@
                 android:contentDescription="Translate" />
 
             <ImageButton
+                android:id="@+id/btnToolPassword"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:src="@drawable/ic_tool_password"
+                android:scaleType="centerInside"
+                android:padding="8dp"
+                android:contentDescription="Password Manager" />
+
+            <ImageButton
                 android:id="@+id/btnToolTheme"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"

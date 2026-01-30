@@ -2,6 +2,8 @@ package com.samiuysal.keyboard.app.di
 
 import android.content.Context
 import com.samiuysal.keyboard.core.preferences.KeyboardPreferences
+import com.samiuysal.keyboard.data.AppDatabase
+import com.samiuysal.keyboard.data.password.PasswordDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,5 +28,17 @@ object AppModule {
     @Singleton
     fun provideKeyboardPreferences(@ApplicationContext context: Context): KeyboardPreferences {
         return KeyboardPreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return AppDatabase.getInstance(context)
+    }
+
+    @Provides
+    @Singleton
+    fun providePasswordDao(database: AppDatabase): PasswordDao {
+        return database.passwordDao()
     }
 }

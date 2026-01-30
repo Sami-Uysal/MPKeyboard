@@ -35,6 +35,16 @@
             android:contentDescription="Translate" />
 
         <ImageView
+            android:id="@+id/tool_password"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:src="@drawable/ic_tool_password"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="Passwords" />
+
+        <ImageView
             android:id="@+id/tool_theme"
             android:layout_width="0dp"
             android:layout_height="match_parent"

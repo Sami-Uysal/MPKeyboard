@@ -53,4 +53,16 @@
     <string name="msg_shortcut_deleted">Kısayol silindi</string>
     <string name="msg_shortcut_error">Kısayol kaydedilemedi</string>
     <string name="msg_shortcut_exists">Bu kısayol zaten mevcut</string>
+
+    <!-- Password Manager -->
+    <string name="label_text_data">METİN VE VERİ</string>
+    <string name="btn_passwords">Parolalar</string>
+    <string name="password_panel_title">Parolalar</string>
+    <string name="password_empty">Bu uygulama için kayıtlı parola yok</string>
+    <string name="password_site">Site/Uygulama Adı</string>
+    <string name="password_username">Kullanıcı Adı</string>
+    <string name="password_password">Parola</string>
+    <string name="msg_password_saved">Parola kaydedildi!</string>
+    <string name="msg_password_deleted">Parola silindi</string>
+    <string name="msg_password_error">Parola kaydedilemedi</string>
 </resources>

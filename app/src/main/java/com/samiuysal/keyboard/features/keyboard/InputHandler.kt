@@ -36,12 +36,42 @@ class InputHandler @Inject constructor() {
     fun deleteSurroundingText(before: Int, after: Int): Boolean {
         return safeExecute { currentConnection?.deleteSurroundingText(before, after) ?: false }
     }
-    fun sendEnterKey(): Boolean {
+    fun sendEnterKey(editorInfo: android.view.inputmethod.EditorInfo? = null): Boolean {
         return safeExecute {
-            currentConnection?.performEditorAction(
-                    android.view.inputmethod.EditorInfo.IME_ACTION_DONE
-            )
-                    ?: false
+            val action =
+                    editorInfo?.imeOptions?.and(android.view.inputmethod.EditorInfo.IME_MASK_ACTION)
+                            ?: android.view.inputmethod.EditorInfo.IME_ACTION_UNSPECIFIED
+
+            // Try to perform the specified editor action first
+            val actionPerformed =
+                    when (action) {
+                        android.view.inputmethod.EditorInfo.IME_ACTION_GO,
+                        android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH,
+                        android.view.inputmethod.EditorInfo.IME_ACTION_SEND,
+                        android.view.inputmethod.EditorInfo.IME_ACTION_NEXT,
+                        android.view.inputmethod.EditorInfo.IME_ACTION_DONE -> {
+                            currentConnection?.performEditorAction(action) ?: false
+                        }
+                        else -> false
+                    }
+
+            // Fallback to sending actual ENTER key event if action didn't work
+            if (!actionPerformed) {
+                val downEvent =
+                        android.view.KeyEvent(
+                                android.view.KeyEvent.ACTION_DOWN,
+                                android.view.KeyEvent.KEYCODE_ENTER
+                        )
+                val upEvent =
+                        android.view.KeyEvent(
+                                android.view.KeyEvent.ACTION_UP,
+                                android.view.KeyEvent.KEYCODE_ENTER
+                        )
+                currentConnection?.sendKeyEvent(downEvent)
+                currentConnection?.sendKeyEvent(upEvent) ?: false
+            } else {
+                true
+            }
         }
     }
 

@@ -22,6 +22,7 @@ class ToolbarManager(private val service: MPKeyboardService, private val rootVie
     private var shortcutManager: ShortcutManager? = null
     private val btnClipboard: ImageView = rootView.findViewById(R.id.tool_clipboard)
     private val btnTranslate: ImageView = rootView.findViewById(R.id.tool_translate)
+    private val btnPassword: ImageView? = rootView.findViewById(R.id.tool_password)
     private val btnTheme: ImageView = rootView.findViewById(R.id.tool_theme)
     private val btnSettings: ImageView = rootView.findViewById(R.id.tool_settings)
 
@@ -47,6 +48,8 @@ class ToolbarManager(private val service: MPKeyboardService, private val rootVie
 
         btnTranslate.setOnClickListener { service.openTranslationFeature() }
 
+        btnPassword?.setOnClickListener { service.openPasswordFeature() }
+
         btnTheme.setOnClickListener {
             try {
                 val intent = Intent(service, MainActivity::class.java)
@@ -69,9 +72,9 @@ class ToolbarManager(private val service: MPKeyboardService, private val rootVie
         }
     }
 
-    fun hideToolsPanel() {
+    fun hideToolsPanel(animate: Boolean = true) {
         val parent = toolsPanel.parent as? android.view.ViewGroup
-        if (parent != null) {
+        if (animate && parent != null) {
             val transition = android.transition.Fade()
             transition.duration = 200
             android.transition.TransitionManager.beginDelayedTransition(parent, transition)
