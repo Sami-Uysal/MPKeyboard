@@ -10,7 +10,6 @@ import android.inputmethodservice.InputMethodService
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -153,7 +152,6 @@ class MPKeyboardService : InputMethodService() {
     fun commitSuggestion(word: String) {
         inputHandler.commitText("$word ")
 
-        val prevWord = composingText.toString()
         predictionEngine.learn(word)
 
         composingText.clear()
@@ -504,7 +502,6 @@ class MPKeyboardService : InputMethodService() {
                                 translator.close()
                             }
                             .addOnFailureListener { exception ->
-                                Log.e(TAG, "Translation failed", exception)
                                 handler.post {
                                     Toast.makeText(
                                                     this,
@@ -518,7 +515,6 @@ class MPKeyboardService : InputMethodService() {
                             }
                 }
                 .addOnFailureListener { exception ->
-                    Log.e(TAG, "Model download failed", exception)
                     handler.post {
                         Toast.makeText(
                                         this,
@@ -846,8 +842,6 @@ class MPKeyboardService : InputMethodService() {
                 emojiView.findViewById<RecyclerView>(R.id.recycler_emoji_categories)
         val recyclerEmojis = emojiView.findViewById<RecyclerView>(R.id.recycler_emojis)
 
-        val iconEmojiActive =
-                emojiView.findViewById<android.widget.ImageView>(R.id.icon_emoji_active)
         val btnOpenGif = emojiView.findViewById<View>(R.id.btn_open_gif)
         val btnCloseEmoji = emojiView.findViewById<View>(R.id.btn_close_emoji)
 

@@ -1,7 +1,6 @@
 package com.samiuysal.keyboard.features.suggestions
 
 import android.content.Context
-import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Locale
@@ -50,10 +49,7 @@ class PredictionEngine(private val context: Context) {
                 }
 
                 reader.close()
-                Log.d(TAG, "Loaded $count words for $languageCode")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error loading dictionary: $fileName", e)
-            }
+            } catch (e: Exception) {} catch (e: Exception) {}
         }
     }
 
@@ -109,9 +105,5 @@ class PredictionEngine(private val context: Context) {
         } else {
             current.frequency++
         }
-    }
-
-    companion object {
-        private const val TAG = "PredictionEngine"
     }
 }
