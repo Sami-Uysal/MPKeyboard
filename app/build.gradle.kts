@@ -109,7 +109,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
     // ML Kit
-    implementation("com.google.mlkit:translate:17.0.2")
+    implementation("com.google.mlkit:translate:17.0.3")
     
     // Coil for Compose (instead of Glide for Compose)
     implementation("io.coil-kt:coil-compose:2.5.0")
