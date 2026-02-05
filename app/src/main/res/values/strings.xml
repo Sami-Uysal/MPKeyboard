@@ -69,12 +69,14 @@
     <string name="accessibility_disclosure_title">Accessibility Permission Needed</string>
     <string name="accessibility_disclosure_message">MP Keyboard uses the AccessibilityService API to
         provide the Password Manager feature.\n\n<b>Data Collection &amp; Usage:</b>\nThis service
-        collects and processes data from your screen, including:\n• <b>Website URLs &amp; App
-        Package Names:</b> To identify where to autofill passwords.\n• <b>User Names &amp; Email
-        Addresses:</b> To save and autofill your login credentials.\n\nThis data is processed
-        locally on your device to enable the Password Manager functionality. It is NOT shared with
-        any third parties or transmitted to external servers.\n\nPlease enable the Accessibility
-        Service for "MP Keyboard" to use this feature.</string>
+        collects and processes the following data types from your screen:\n• <b>Name:</b> Your name
+        as displayed in login forms.\n• <b>Email Address:</b> Your email address for login
+        credentials.\n• <b>Website URLs &amp; App Package Names:</b> To identify where to autofill
+        passwords.\n\nAll collected data (Name, Email Address, URLs) is processed and stored locally
+        on your device only. This data is used solely to enable the Password Manager auto-fill
+        functionality.\n\n<b>Privacy Assurance:</b>\nYour data is NOT shared with any third parties
+        and is NOT transmitted to external servers. All data remains encrypted on your
+        device.\n\nPlease enable the Accessibility Service for \"MP Keyboard\" to use this feature.</string>
     <string name="accessibility_disclosure_accept">Enable Service</string>
     <string name="accessibility_disclosure_deny">Not Now</string>
 </resources>
